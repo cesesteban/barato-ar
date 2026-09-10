@@ -1,0 +1,7 @@
+id_comercio,id_bandera,id_sucursal,id_producto,productos_precio_lista,productos_precio_referencia_impuestos_incluidos,fecha_relevamiento
+1,1,c-palermo-01,7790895000119,1290,1290,2026-09-10
+1,1,c-palermo-01,7791234567890,3200,3200,2026-09-10
+15,1,coto-belgrano-02,7790895000119,1350,1350,2026-09-10
+10,1,dia-caballito-05,7790895000119,1200,1200,2026-09-10
+1,1,c-palermo-01,7797777777777,4200,4200,2026-09-10
+17,1,laanonima-ushuaia-01,7790895000119,1500,1500,2026-09-10
