@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { seedChainsAndVirtualStores } from "./seed/chains";
+import { seedZones } from "../src/ingestion/pcl/zones";
 
 const prisma = new PrismaClient();
 
@@ -10,6 +11,7 @@ async function main() {
     create: { id: 1, version: "0.1.0" },
   });
   await seedChainsAndVirtualStores();
+  await seedZones();
   console.info("✅ Seed completo.");
 }
 

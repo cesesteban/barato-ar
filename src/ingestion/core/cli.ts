@@ -1,23 +1,38 @@
 #!/usr/bin/env node
 /**
- * CLI de ingesta: `pnpm ingest <chain>` [--dry-run] [--limit N].
+ * CLI de ingesta: `pnpm ingest <chain>` [--dry-run].
+ * Cadenas con parser de folleto (F003): carrefour, coto, dia, jumbo, ...
+ * `pcl` (F004): dispara el pipeline de Precios Claros (SEPA).
  */
 
 import { Command } from "commander";
 import { runIngestion } from "./runner";
 import { getChainParser } from "../chains";
+import { runPclIngestion } from "../pcl/runner";
 import { prisma } from "@/lib/db";
 
 const program = new Command();
 
 program
   .name("ingest")
-  .description("Ejecuta la ingesta semanal de un folleto de supermercado")
-  .argument("<chain>", "slug de la cadena (carrefour, coto, dia, jumbo, pcl)")
+  .description("Ejecuta la ingesta de una cadena o de Precios Claros (pcl)")
+  .argument("<chain>", "slug: carrefour, coto, dia, jumbo, pcl")
   .option("--dry-run", "no persiste; solo cuenta rows")
-  .option("--store <id>", "storeId a asociar (default: sucursal virtual de la cadena)")
+  .option("--store <id>", "storeId (folleto): default sucursal virtual de la cadena")
   .option("--zone <slug>", "zona afectada para revalidate", (v, prev: string[]) => [...prev, v], [] as string[])
   .action(async (chainSlug: string, options: { dryRun?: boolean; store?: string; zone: string[] }) => {
+    if (chainSlug === "pcl") {
+      console.info("[ingest] pipeline=pcl (Precios Claros / SEPA)");
+      const started = Date.now();
+      const summary = await runPclIngestion();
+      const elapsed = ((Date.now() - started) / 1000).toFixed(1);
+      console.info(
+        `[ingest] pcl status=${summary.status} stores=${summary.pass1.storesUpserted} products=${summary.pass2.productsUpserted} prices=${summary.pass3.pricesUpserted} deduped=${summary.pass3.rowsDedupedVsFlyer} elapsed=${elapsed}s`,
+      );
+      if (summary.errorMessage) console.error(`[ingest] error: ${summary.errorMessage}`);
+      process.exit(summary.status === "failed" ? 1 : 0);
+    }
+
     const parser = await getChainParser(chainSlug);
     if (!parser) {
       console.error(`No hay parser para "${chainSlug}"`);

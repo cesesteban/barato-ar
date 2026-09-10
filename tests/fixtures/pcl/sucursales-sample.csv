@@ -1,0 +1,7 @@
+id_comercio,id_bandera,id_sucursal,sucursales_nombre,sucursales_calle,sucursales_numero,provincia,ciudad,localidad,sucursales_latitud,sucursales_longitud
+1,1,c-palermo-01,Carrefour Palermo,Av. Santa Fe,3253,CABA,Palermo,Palermo,-34.5875,-58.4300
+15,1,coto-belgrano-02,Coto Belgrano,Av. Cabildo,2020,CABA,Belgrano,Belgrano,-34.5624,-58.4557
+10,1,dia-caballito-05,Dia Caballito,Rivadavia,5000,CABA,Caballito,Caballito,-34.6197,-58.4405
+1,1,c-moron-11,Carrefour Morón,Calle Falsa,123,Buenos Aires,Morón,Morón,-34.6533,-58.6193
+17,1,laanonima-ushuaia-01,La Anónima Ushuaia,San Martín,900,Tierra del Fuego,Ushuaia,Ushuaia,-54.8019,-68.3030
+99,1,unknown-01,Farmacia Random,Calle X,1,CABA,Palermo,Palermo,-34.5875,-58.4300
