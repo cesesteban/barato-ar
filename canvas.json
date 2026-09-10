@@ -1,0 +1,15 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Home — Desktop 1440", "x": 0, "y": 0, "w": 1440, "h": 2200 },
+    { "file": "Product.dc.html", "title": "Producto (comparación) — Desktop", "x": 1560, "y": 0, "w": 1440, "h": 1700 },
+    { "file": "Feed.dc.html", "title": "Feed completo con filtros — Desktop", "x": 3120, "y": 0, "w": 1440, "h": 1400 },
+    { "file": "HomeMobile.dc.html", "title": "Home — Mobile 375", "x": 0, "y": 2360, "w": 375, "h": 1350 },
+    { "file": "ProductMobile.dc.html", "title": "Producto — Mobile 375", "x": 495, "y": 2360, "w": 375, "h": 1800 }
+  ],
+  "annotations": [
+    { "id": "brief", "x": 0, "y": -180, "w": 900, "text": "Precioya — Comparador de ofertas por zona\nCABA + GBA · Súper, Delivery, Farmacia, Bebidas\n\nEstilo Notion/Linear: base neutra, acento indigo (#4f46e5), verde ahorro (#10b981), badge coral (#f43f5e). Inter, radius 10-12, sombras sutiles, mucho whitespace." },
+    { "id": "row-desktop", "x": 1560, "y": -60, "w": 500, "text": "Desktop (1440px) — 3 artboards principales" },
+    { "id": "row-mobile", "x": 0, "y": 2300, "w": 400, "text": "Mobile (375px) — versiones responsive" }
+  ],
+  "launch": { "view": "canvas" }
+}

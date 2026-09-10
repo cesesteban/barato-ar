@@ -1,0 +1,65 @@
+# deps
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# production
+build/
+dist/
+
+# testing
+coverage/
+playwright-report/
+test-results/
+
+# misc
+.DS_Store
+*.pem
+Thumbs.db
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env
+.env*.local
+.env.development
+.env.production
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+
+# turbo
+.turbo/
+
+# prisma
+prisma/migrations/dev.db
+prisma/migrations/dev.db-journal
+
+# ide
+.vscode/
+.idea/
+*.swp
+
+# playwright browsers
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# storybook
+storybook-static/
+
+# design-canvas outputs (mantener .dc.html en repo; excluir el bundle pesado publicado)
+precioya-wireframes.html
+*.dc.html.bak
