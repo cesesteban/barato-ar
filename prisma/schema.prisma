@@ -278,6 +278,38 @@ model Offer {
   @@map("offers")
 }
 
+// ============================================================================
+// Normalizer (F005 · C-001..C-006)
+// ============================================================================
+
+model NormalizerCandidate {
+  id         String   @id @default(cuid())
+  productAId String
+  productBId String
+  confidence Float
+  features   Json
+  status     String   @default("pending") // pending | approved | rejected
+  decidedBy  String?
+  decidedAt  DateTime?
+  createdAt  DateTime @default(now())
+
+  @@unique([productAId, productBId])
+  @@index([status, confidence])
+  @@map("normalizer_candidates")
+}
+
+model NormalizerReject {
+  id         String   @id @default(cuid())
+  productAId String
+  productBId String
+  reason     String?
+  rejectedBy String
+  rejectedAt DateTime @default(now())
+
+  @@unique([productAId, productBId])
+  @@map("normalizer_rejects")
+}
+
 model IngestionRun {
   id           String          @id @default(cuid())
   chainId      String

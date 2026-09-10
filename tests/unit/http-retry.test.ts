@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { fetchWithRetry } from "@/lib/http-retry";
 
+// Evita la importación pesada del wrapper de Sentry en el path de falla final.
+vi.mock("@sentry/nextjs", () => ({ captureMessage: vi.fn() }));
+
 const originalFetch = globalThis.fetch;
 
 beforeEach(() => {
