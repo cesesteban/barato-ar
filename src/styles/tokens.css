@@ -1,0 +1,125 @@
+/* Barato.ar · Design tokens (Feature 002)
+ * Fuente única de verdad para colores, spacing, radius, shadows, tipografía y motion.
+ * Uso: consumir con var(--<token>) en CSS o via Tailwind (mapeado en tailwind.config.ts).
+ * Dark mode: definido en el media query al final (C-005 dice claro-first, oscuro post-MVP).
+ */
+
+:root {
+  /* Color · neutral base (slate-inspired) */
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f1f5f9;
+  --color-surface-hover: #e2e8f0;
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-text: #0f172a;
+  --color-text-muted: #475569;
+  --color-text-subtle: #94a3b8;
+  --color-text-disabled: #cbd5e1;
+
+  /* Color · brand */
+  --color-primary: #4f46e5;         /* indigo-600 */
+  --color-primary-hover: #4338ca;   /* indigo-700 */
+  --color-primary-soft: #eef2ff;    /* indigo-50 */
+  --color-primary-fg: #ffffff;
+
+  /* Color · savings & alert */
+  --color-savings: #10b981;         /* emerald-500 */
+  --color-savings-soft: #ecfdf5;
+  --color-savings-fg: #ffffff;
+
+  --color-discount: #f43f5e;        /* rose-500 */
+  --color-discount-soft: #fef2f2;
+  --color-discount-fg: #ffffff;
+
+  --color-warning: #f59e0b;
+  --color-warning-soft: #fffbeb;
+  --color-warning-fg: #78350f;
+
+  --color-info: #0ea5e9;
+  --color-info-soft: #f0f9ff;
+  --color-info-fg: #ffffff;
+
+  /* Color · focus ring */
+  --color-focus: #4f46e5;
+
+  /* Spacing (rem-based, 4pt grid) */
+  --space-0: 0;
+  --space-1: 0.25rem;   /*  4px */
+  --space-2: 0.5rem;    /*  8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(79, 70, 229, 0.25);
+
+  /* Motion */
+  --duration-fast: 120ms;
+  --duration-med: 200ms;
+  --duration-slow: 320ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Typography */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+
+  --text-2xs: 0.6875rem;   /* 11px */
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  --text-6xl: 3.75rem;     /* 60px */
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* Z-index scale */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-toast: 600;
+  --z-tooltip: 700;
+}
+
+[data-theme="dark"] {
+  --color-bg: #0f172a;
+  --color-surface: #1e293b;
+  --color-surface-muted: #334155;
+  --color-surface-hover: #475569;
+  --color-border: #334155;
+  --color-border-strong: #475569;
+  --color-text: #f8fafc;
+  --color-text-muted: #cbd5e1;
+  --color-text-subtle: #94a3b8;
+  --color-text-disabled: #475569;
+  --color-primary-soft: #1e1b4b;
+  --color-savings-soft: #022c22;
+  --color-discount-soft: #4c0519;
+}

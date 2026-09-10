@@ -47,15 +47,13 @@ describe("fetchWithRetry", () => {
   });
 
   it("tras agotar reintentos, throw", async () => {
-    globalThis.fetch = vi
-      .fn()
-      .mockResolvedValue(new Response("boom", { status: 500 }));
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response("boom", { status: 500 }));
     const p = fetchWithRetry("https://example.com", { label: "test" });
-    // Attach a noop rejection handler para que Vitest no reporte la rejection
-    // como unhandled entre `runAllTimersAsync` y el assert final.
-    p.catch(() => {});
-    await vi.runAllTimersAsync();
-    await expect(p).rejects.toThrow(/agotó reintentos/);
+    // Registrar el rejection handler ANTES de avanzar timers evita que Vitest
+    // marque la rejection como unhandled durante el flush.
+    const assertion = expect(p).rejects.toThrow(/agotó reintentos/);
+    await vi.advanceTimersByTimeAsync(21_000); // 1s + 4s + 15s = 20s de backoff
+    await assertion;
     expect(globalThis.fetch).toHaveBeenCalledTimes(4);
-  });
+  }, 10_000);
 });
