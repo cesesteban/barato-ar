@@ -47,11 +47,11 @@ export async function fetchWithRetry(
   throw new Error("unreachable");
 }
 
-function logFinalFailure(label: string, url: string, attempts: number, message: string) {
-  // Import perezoso para no acoplar el módulo a Sentry cuando no está inicializado.
+async function logFinalFailure(label: string, url: string, attempts: number, message: string) {
+  // Import perezoso vía dynamic import para no acoplar el módulo a Sentry
+  // cuando no está inicializado (ej. tests, scripts standalone).
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const Sentry = require("@sentry/nextjs");
+    const Sentry = await import("@sentry/nextjs");
     Sentry.captureMessage("scraper_fetch_final_failure", {
       level: "warning",
       tags: { label },
