@@ -1,0 +1,47 @@
+name: Weekly Flyer Ingestion
+
+on:
+  schedule:
+    - cron: "0 11 * * 1"   # lunes 11:00 UTC = 8am ART
+  workflow_dispatch:
+    inputs:
+      chain:
+        description: "Chain slug (carrefour|coto|dia|jumbo|all)"
+        required: false
+        default: "all"
+
+concurrency:
+  group: ingest-flyers-${{ github.event.inputs.chain || 'all' }}
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        chain:
+          - carrefour
+          # Coto/Día/Jumbo se agregan cuando sus parsers estén listos (Fase 4)
+      fail-fast: false
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      AUTH_URL: ${{ secrets.AUTH_URL }}
+      REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
+      NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN_INGEST }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm prisma generate
+      - name: Skip si esta chain no fue solicitada
+        if: ${{ github.event.inputs.chain != '' && github.event.inputs.chain != 'all' && github.event.inputs.chain != matrix.chain }}
+        run: exit 0
+      - run: pnpm ingest ${{ matrix.chain }}
