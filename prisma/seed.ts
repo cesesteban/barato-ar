@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { seedChainsAndVirtualStores } from "./seed/chains";
 
 const prisma = new PrismaClient();
 
@@ -8,7 +9,8 @@ async function main() {
     update: { version: "0.1.0" },
     create: { id: 1, version: "0.1.0" },
   });
-  console.info("✅ Seed OK: AppMeta rehidratada.");
+  await seedChainsAndVirtualStores();
+  console.info("✅ Seed completo.");
 }
 
 main()
