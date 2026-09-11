@@ -12,19 +12,42 @@ Nombre productivo confirmado en [C-005](.specify/memory/clarifications.md#c-005-
 
 ## Setup local (< 5 min)
 
-**Requisitos**: Node ≥ 20, pnpm ≥ 10, Git, cuenta Neon Postgres, cuenta Resend.
+**Requisitos**: Node ≥ 20, pnpm ≥ 10, Git. Opcional: Docker (recomendado para
+levantar Postgres/Redis/MailPit sin instalar nada más — ver [docs/docker.md](./docs/docker.md)).
+
+### Opción A: Docker para infra + `pnpm dev` local (recomendada)
 
 ```bash
 git clone <repo> && cd barato-ar
 pnpm install
-cp .env.example .env.local
-# Editar .env.local con tus credenciales (Neon, Auth secret, Resend, R2 opcional)
+cp .env.docker.example .env.local
 
+docker compose up -d db redis mailpit
 pnpm prisma generate
-pnpm db:migrate                 # aplica migraciones y crea AppMeta/Auth tables
-pnpm db:seed                    # rehidrata AppMeta
+pnpm db:migrate
+pnpm db:seed
 
-pnpm dev                        # http://localhost:3000
+pnpm dev                        # http://localhost:3900
+```
+
+Puertos elegidos para no colisionar con otros contenedores: app **3900**,
+Postgres **5434**, Redis **6380**, MailPit **1025 (SMTP) / 8025 (UI)**.
+
+### Opción B: Stack completo dockerizado (production-like)
+
+```bash
+docker compose up -d --build    # aplica migrate deploy + arranca todo
+```
+
+### Opción C: Sin Docker (Neon + servicios externos)
+
+```bash
+pnpm install
+cp .env.example .env.local     # completá URLs de Neon, Resend, R2, ...
+pnpm prisma generate
+pnpm db:migrate
+pnpm db:seed
+pnpm dev
 ```
 
 Verificá que anda:
