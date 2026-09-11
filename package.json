@@ -28,6 +28,7 @@
     "normalize:full": "tsx src/scripts/normalize.ts",
     "alerts:scan": "tsx src/scripts/alerts-scan.ts",
     "views:refresh": "tsx src/scripts/refresh-views.ts",
+    "reports:purge": "tsx src/scripts/reports-purge.ts",
     "format": "prettier --write .",
     "prepare": "prisma generate"
   },
