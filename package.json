@@ -23,6 +23,7 @@
     "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:demo": "tsx src/scripts/seed-demo.ts",
     "ingest": "tsx src/ingestion/core/cli.ts",
     "normalize:full": "tsx src/scripts/normalize.ts",
     "format": "prettier --write .",
