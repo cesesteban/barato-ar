@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
-  output: "standalone",
+  // output: "standalone" — deshabilitado; el Dockerfile copia el build completo.
   experimental: {
     typedRoutes: true,
   },

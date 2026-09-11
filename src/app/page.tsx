@@ -8,17 +8,34 @@ import { Bell, Search, TrendingDown } from "lucide-react";
 
 export const revalidate = 300;
 
+async function safeFeed() {
+  try {
+    return await runOffers({
+      zone: "caba-palermo",
+      chains: [],
+      minDiscount: 0,
+      maxDistanceKm: 5,
+      validity: "week",
+      sort: "discount",
+      limit: 8,
+      includeNearby: true,
+    });
+  } catch (err) {
+    // Build-time o DB caída: home igual renderiza con feed vacío. ISR lo
+    // rehace cuando la DB vuelve. Cumple Ppio II (nunca inventar datos).
+    console.warn("[home] feed unavailable:", err instanceof Error ? err.message : err);
+    return {
+      items: [],
+      total: 0,
+      ms: 0,
+      facets: { chains: [] as Array<{ slug: string; name: string; count: number }>, verticals: [] },
+      nextCursor: null,
+    };
+  }
+}
+
 export default async function HomePage() {
-  const feed = await runOffers({
-    zone: "caba-palermo",
-    chains: [],
-    minDiscount: 0,
-    maxDistanceKm: 5,
-    validity: "week",
-    sort: "discount",
-    limit: 8,
-    includeNearby: true,
-  });
+  const feed = await safeFeed();
 
   return (
     <PageShell zoneLabel="Palermo, CABA">
