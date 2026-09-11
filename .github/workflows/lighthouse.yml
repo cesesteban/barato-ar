@@ -1,0 +1,29 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  lhci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm add -D @lhci/cli
+      - name: Levantar stack docker
+        run: docker compose up -d --wait
+      - name: Seed demo data
+        run: docker compose exec -T app pnpm db:seed:demo || true
+      - name: Lighthouse CI
+        run: pnpm exec lhci autorun --config=.lighthouserc.json || echo "LHCI advisory (allow)"
+      - name: Down
+        if: always()
+        run: docker compose down -v

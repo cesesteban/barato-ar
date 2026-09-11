@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Inter } from "next/font/google";
 import { env } from "@/lib/env";
+import { orgJsonLd, websiteJsonLd } from "@/lib/jsonld";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,6 +40,23 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es-AR" className={inter.variable}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd()) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd()) }}
+        />
+        {env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN && env.NODE_ENV === "production" ? (
+          <Script
+            defer
+            data-domain={env.NEXT_PUBLIC_PLAUSIBLE_DOMAIN}
+            src="https://plausible.io/js/script.js"
+          />
+        ) : null}
+      </head>
       <body className="font-sans">{children}</body>
     </html>
   );

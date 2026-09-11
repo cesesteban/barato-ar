@@ -3,7 +3,6 @@ import { PageShell } from "@/components/layout";
 import { Badge, Button, Card, CardBody } from "@/components/ui";
 import { DealCard, SearchBar } from "@/components/domain";
 import { runOffers } from "@/server/offers/service";
-import { orgJsonLd, websiteJsonLd } from "@/lib/jsonld";
 import { Bell, Search, TrendingDown } from "lucide-react";
 
 export const revalidate = 300;
@@ -39,9 +38,6 @@ export default async function HomePage() {
 
   return (
     <PageShell zoneLabel="Palermo, CABA">
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd()) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd()) }} />
-
       <section className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-6 py-16 text-center">
         <Badge variant="primary" className="gap-1">
           <span className="size-2 rounded-full bg-savings" aria-hidden />
