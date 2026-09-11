@@ -326,6 +326,62 @@ model EmailEvent {
   @@map("email_events")
 }
 
+// ============================================================================
+// Community reports (F011 · crowdsourcing)
+// ============================================================================
+
+enum ReportStatus {
+  pending
+  approved
+  rejected
+  auto_hidden
+  re_review
+}
+
+model Report {
+  id             String       @id @default(cuid())
+  productSlug    String?      @map("product_slug")
+  productText    String?      @map("product_text")
+  chainSlug      String       @map("chain_slug")
+  storeText      String?      @map("store_text")
+  storeId        String?      @map("store_id")
+  price          Decimal      @db.Decimal(10, 2)
+  previousPrice  Decimal?     @db.Decimal(10, 2) @map("previous_price")
+  validTo        DateTime?    @map("valid_to")
+  photoUrl       String?      @map("photo_url")
+  photoBlobKey   String?      @map("photo_blob_key")
+  description    String?      @db.Text
+  ipHash         String       @map("ip_hash")
+  status         ReportStatus @default(pending)
+  reasonRejected String?      @map("reason_rejected")
+  approvedBy     String?      @map("approved_by")
+  approvedAt     DateTime?    @map("approved_at")
+  purgedAt       DateTime?    @map("purged_at")
+  upvotes        Int          @default(0)
+  downvotes      Int          @default(0)
+  createdAt      DateTime     @default(now()) @map("created_at")
+
+  votes ReportVote[]
+
+  @@index([status, createdAt])
+  @@index([ipHash, createdAt])
+  @@map("reports")
+}
+
+model ReportVote {
+  id        String   @id @default(cuid())
+  reportId  String   @map("report_id")
+  ipHash    String   @map("ip_hash")
+  kind      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, ipHash])
+  @@index([reportId, kind])
+  @@map("report_votes")
+}
+
 model SearchLog {
   id               BigInt   @id @default(autoincrement())
   query            String
