@@ -7,6 +7,7 @@ export * from "./expired-badge";
 export * from "./neighbors-toggle";
 export * from "./price-comparison-row";
 export * from "./price-history-chart";
+export * from "./price-history-card";
 export * from "./price-tag";
 export * from "./promo-badge";
 export * from "./search-bar";
