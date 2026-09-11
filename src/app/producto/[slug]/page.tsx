@@ -7,10 +7,11 @@ import {
   AlertCard,
   ConsultarBadge,
   PriceComparisonRow,
-  PriceHistoryChart,
+  PriceHistoryCard,
   PriceTag,
 } from "@/components/domain";
 import { getComparison } from "@/server/product/get-comparison";
+import { getHistory } from "@/server/history/get-history";
 import type { ComparisonStoreRow } from "@/server/product/types";
 import { productJsonLd } from "@/lib/jsonld";
 import { env } from "@/lib/env";
@@ -51,7 +52,10 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
   const sp = await searchParams;
   const zone = pickString(sp["zone"]) ?? "caba-palermo";
-  const data = await getComparison({ slug, zoneSlug: zone });
+  const [data, history] = await Promise.all([
+    getComparison({ slug, zoneSlug: zone }),
+    getHistory({ slug, zone, days: 90 }).catch(() => null),
+  ]);
   if (!data) notFound();
 
   const allStores = [...data.stores.inZone, ...data.stores.nearby, ...data.stores.national];
@@ -185,15 +189,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_360px]">
-          <Card>
-            <CardBody>
-              <h2 className="mb-4 text-lg font-bold tracking-tight">Historial de precios</h2>
-              <PriceHistoryChart data={[]} />
-              <p className="mt-3 text-2xs text-text-subtle">
-                Los datos completos aparecen cuando la ingesta acumula historial (F010).
-              </p>
-            </CardBody>
-          </Card>
+          <PriceHistoryCard slug={data.product.slug} zone={zone} initial={history} />
           <AlertCard productSlug={data.product.slug} currentPrice={bestPrice ?? undefined} />
         </div>
       </div>

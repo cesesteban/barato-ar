@@ -27,6 +27,7 @@
     "ingest": "tsx src/ingestion/core/cli.ts",
     "normalize:full": "tsx src/scripts/normalize.ts",
     "alerts:scan": "tsx src/scripts/alerts-scan.ts",
+    "views:refresh": "tsx src/scripts/refresh-views.ts",
     "format": "prettier --write .",
     "prepare": "prisma generate"
   },
