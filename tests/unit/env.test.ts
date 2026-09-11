@@ -35,6 +35,7 @@ describe("env.ts", () => {
 
   it("falla si falta AUTH_SECRET", async () => {
     const { AUTH_SECRET: _drop, ...rest } = REQUIRED;
+    delete originalEnv["AUTH_SECRET"];
     process.env = { ...originalEnv, ...rest } as NodeJS.ProcessEnv;
     await expect(loadEnvFresh()).rejects.toThrow(/Environment validation/);
   });
