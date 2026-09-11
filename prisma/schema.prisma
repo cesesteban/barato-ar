@@ -195,6 +195,7 @@ model Product {
   prices    Price[]
   offers    Offer[]
   history   PriceHistory[]
+  alerts    Alert[]
 
   @@index([normalizedName])
   @@index([brand])
@@ -273,6 +274,56 @@ model Offer {
 
   @@index([chainId, validTo])
   @@map("offers")
+}
+
+// ============================================================================
+// Alertas de precio (F009)
+// ============================================================================
+
+enum AlertStatus {
+  pending
+  active
+  notified
+  cancelled
+  bounced
+}
+
+model Alert {
+  id              String      @id @default(cuid())
+  email           String
+  productId       String      @map("product_id")
+  targetPrice     Decimal     @db.Decimal(10, 2) @map("target_price")
+  zoneSlug        String      @map("zone_slug")
+  status          AlertStatus @default(pending)
+  verifyTokenHash String      @unique @map("verify_token_hash")
+  unsubTokenHash  String      @unique @map("unsub_token_hash")
+  verifiedAt      DateTime?   @map("verified_at")
+  notifiedAt      DateTime?   @map("notified_at")
+  cancelledAt     DateTime?   @map("cancelled_at")
+  ipHash          String?     @map("ip_hash")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  expiresAt       DateTime    @map("expires_at")
+
+  product Product      @relation(fields: [productId], references: [id])
+  events  EmailEvent[]
+
+  @@unique([email, productId, targetPrice])
+  @@index([status, verifiedAt])
+  @@index([email])
+  @@map("alerts")
+}
+
+model EmailEvent {
+  id       BigInt   @id @default(autoincrement())
+  alertId  String   @map("alert_id")
+  kind     String
+  metadata Json?
+  ts       DateTime @default(now())
+
+  alert Alert @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@index([alertId, ts])
+  @@map("email_events")
 }
 
 model SearchLog {

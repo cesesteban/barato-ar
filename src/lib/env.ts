@@ -22,8 +22,10 @@ const envSchema = z.object({
     .default("")
     .transform((s) => new Set(s.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean))),
 
-  // Resend
+  // Email transaccional (F009 + Auth.js F001)
   RESEND_API_KEY: optionalString(z.string().min(1)),
+  SMTP_URL: optionalString(z.string().min(1)),
+  MAIL_FROM: z.string().default("Barato.ar <alertas@barato.ar>"),
 
   // On-demand revalidation (C-008)
   REVALIDATE_SECRET: z.string().min(16),
