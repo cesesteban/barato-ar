@@ -21,6 +21,9 @@ export default function HomePage() {
           arranquen las ingestas de Feature 003.
         </p>
         <SearchBar zoneLabel="Palermo" className="w-full max-w-xl" />
+        <p className="text-sm text-text-subtle">
+          Empezá con &ldquo;coca 2.25&rdquo; o &ldquo;aceite&rdquo; — /buscar te devuelve los mejores precios.
+        </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button asChild variant="outline">
             <Link href="/dev/components">Ver design system</Link>

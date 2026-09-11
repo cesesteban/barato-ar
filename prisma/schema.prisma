@@ -310,6 +310,19 @@ model NormalizerReject {
   @@map("normalizer_rejects")
 }
 
+model SearchLog {
+  id               BigInt   @id @default(autoincrement())
+  query            String
+  zoneSlug         String?
+  resultsCount     Int
+  clickedProductId String?
+  ipHash           String?
+  ts               DateTime @default(now())
+
+  @@index([query, ts])
+  @@map("search_logs")
+}
+
 model IngestionRun {
   id           String          @id @default(cuid())
   chainId      String
