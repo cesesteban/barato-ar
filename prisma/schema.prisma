@@ -1,5 +1,5 @@
-// Barato.ar — schema del core (Feature 003).
-// Incluye Auth.js tables (C-010) + dominio completo con clarifications C-001..C-006.
+// Barato.ar — schema del core.
+// Columnas mapeadas a snake_case para SQL raw estándar; tablas mapeadas también.
 
 generator client {
   provider        = "prisma-client-js"
@@ -10,7 +10,7 @@ datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
   directUrl  = env("DATABASE_URL_UNPOOLED")
-  extensions = [pg_trgm, pgvector]
+  extensions = [pg_trgm, vector]
 }
 
 // ============================================================================
@@ -20,7 +20,7 @@ datasource db {
 model AppMeta {
   id        Int      @id @default(1)
   version   String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("app_meta")
 }
@@ -32,10 +32,10 @@ model AppMeta {
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  emailVerified DateTime?
+  emailVerified DateTime? @map("email_verified")
   name          String?
   image         String?
-  createdAt     DateTime  @default(now())
+  createdAt     DateTime  @default(now()) @map("created_at")
 
   accounts Account[]
   sessions Session[]
@@ -45,10 +45,10 @@ model User {
 
 model Account {
   id                String  @id @default(cuid())
-  userId            String
+  userId            String  @map("user_id")
   type              String
   provider          String
-  providerAccountId String
+  providerAccountId String  @map("provider_account_id")
   refresh_token     String?
   access_token      String?
   expires_at        Int?
@@ -65,8 +65,8 @@ model Account {
 
 model Session {
   id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
   expires      DateTime
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -103,11 +103,11 @@ enum PriceSource {
 }
 
 enum PromoType {
-  unit // C-001: precio simple
-  nx1 // 2x1, 3x1
-  nxm // 3x2
-  second_off // 2do al 70%
-  bundle_discount // 3 iguales 20%
+  unit
+  nx1
+  nxm
+  second_off
+  bundle_discount
 }
 
 enum IngestionStatus {
@@ -122,9 +122,9 @@ model Chain {
   name       String
   slug       String   @unique
   vertical   Vertical @default(supermarket)
-  logoUrl    String?
-  websiteUrl String?
-  createdAt  DateTime @default(now())
+  logoUrl    String?  @map("logo_url")
+  websiteUrl String?  @map("website_url")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   stores Store[]
   offers Offer[]
@@ -137,10 +137,10 @@ model Zone {
   id       String  @id
   name     String
   slug     String  @unique
-  parentId String?
+  parentId String? @map("parent_id")
   lat      Float?
   lng      Float?
-  radiusKm Float?
+  radiusKm Float?  @map("radius_km")
 
   parent   Zone?   @relation("ZoneParent", fields: [parentId], references: [id])
   children Zone[]  @relation("ZoneParent")
@@ -151,15 +151,15 @@ model Zone {
 
 model Store {
   id        String   @id @default(cuid())
-  chainId   String
+  chainId   String   @map("chain_id")
   name      String
   slug      String   @unique
   address   String?
-  zoneId    String?
+  zoneId    String?  @map("zone_id")
   lat       Float?
   lng       Float?
-  isVirtual Boolean  @default(false)
-  createdAt DateTime @default(now())
+  isVirtual Boolean  @default(false) @map("is_virtual")
+  createdAt DateTime @default(now()) @map("created_at")
 
   chain  Chain   @relation(fields: [chainId], references: [id])
   zone   Zone?   @relation(fields: [zoneId], references: [id])
@@ -172,23 +172,23 @@ model Store {
 model Product {
   id              String    @id @default(cuid())
   name            String
-  normalizedName  String
+  normalizedName  String    @map("normalized_name")
   brand           String?
   size            Float?
   unit            String?
-  standardSize    Decimal?  @db.Decimal(10, 4) // C-003
-  standardUnit    String? // C-003
-  packagingFlag   String? // C-004
+  standardSize    Decimal?  @db.Decimal(10, 4) @map("standard_size")
+  standardUnit    String?   @map("standard_unit")
+  packagingFlag   String?   @map("packaging_flag")
   category        String?
-  imageUrl        String? // C-006
-  imageSourceUrl  String? // C-006 auditoría
-  imageStatus     String? // ok | missing | failed | placeholder
-  imageCapturedAt DateTime?
-  eanCode         String?   @unique
+  imageUrl        String?   @map("image_url")
+  imageSourceUrl  String?   @map("image_source_url")
+  imageStatus     String?   @map("image_status")
+  imageCapturedAt DateTime? @map("image_captured_at")
+  eanCode         String?   @unique @map("ean_code")
   slug            String    @unique
-  canonicalId     String? // F005
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  canonicalId     String?   @map("canonical_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   canonical Product?       @relation("CanonicalProduct", fields: [canonicalId], references: [id])
   aliases   Product[]      @relation("CanonicalProduct")
@@ -206,33 +206,30 @@ model Product {
 
 model Price {
   id              String      @id @default(cuid())
-  productId       String
-  storeId         String
+  productId       String      @map("product_id")
+  storeId         String      @map("store_id")
   price           Decimal     @db.Decimal(10, 2)
-  previousPrice   Decimal?    @db.Decimal(10, 2)
+  previousPrice   Decimal?    @db.Decimal(10, 2) @map("previous_price")
   currency        String      @default("ARS")
-  isOffer         Boolean     @default(false)
-  discountPct     Float?
-  validFrom       DateTime
-  validTo         DateTime?
+  isOffer         Boolean     @default(false) @map("is_offer")
+  discountPct     Float?      @map("discount_pct")
+  validFrom       DateTime    @map("valid_from")
+  validTo         DateTime?   @map("valid_to")
   source          PriceSource
-  sourceUrl       String?
-  storeProductUrl String? // C-006 deep link al PDP
-  capturedAt      DateTime    @default(now())
+  sourceUrl       String?     @map("source_url")
+  storeProductUrl String?     @map("store_product_url")
+  capturedAt      DateTime    @default(now()) @map("captured_at")
 
-  // C-001 — combos
-  promoType              PromoType @default(unit)
-  promoBuyQty            Int?
-  promoPayQty            Int?
-  promoSecondDiscountPct Float?
-  promoDescription       String?
+  promoType              PromoType @default(unit) @map("promo_type")
+  promoBuyQty            Int?      @map("promo_buy_qty")
+  promoPayQty            Int?      @map("promo_pay_qty")
+  promoSecondDiscountPct Float?    @map("promo_second_discount_pct")
+  promoDescription       String?   @map("promo_description")
 
-  // C-003 — precio por unidad
-  pricePerUnit    Decimal? @db.Decimal(10, 4)
-  pricePerUnitEff Decimal? @db.Decimal(10, 4)
+  pricePerUnit    Decimal? @db.Decimal(10, 4) @map("price_per_unit")
+  pricePerUnitEff Decimal? @db.Decimal(10, 4) @map("price_per_unit_eff")
 
-  // F008 caché para ranking
-  upvotesCache Int @default(0)
+  upvotesCache Int @default(0) @map("upvotes_cache")
 
   product Product @relation(fields: [productId], references: [id])
   store   Store   @relation(fields: [storeId], references: [id])
@@ -246,10 +243,10 @@ model Price {
 
 model PriceHistory {
   id         BigInt   @id @default(autoincrement())
-  productId  String
-  storeId    String
+  productId  String   @map("product_id")
+  storeId    String   @map("store_id")
   price      Decimal  @db.Decimal(10, 2)
-  capturedAt DateTime @default(now())
+  capturedAt DateTime @default(now()) @map("captured_at")
 
   product Product @relation(fields: [productId], references: [id])
 
@@ -261,15 +258,15 @@ model Offer {
   id          String    @id @default(cuid())
   title       String
   description String?
-  productId   String?
-  chainId     String
-  discountPct Float?
+  productId   String?   @map("product_id")
+  chainId     String    @map("chain_id")
+  discountPct Float?    @map("discount_pct")
   badge       String?
-  validFrom   DateTime
-  validTo     DateTime?
-  sourceUrl   String?
+  validFrom   DateTime  @map("valid_from")
+  validTo     DateTime? @map("valid_to")
+  sourceUrl   String?   @map("source_url")
   upvotes     Int       @default(0)
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   product Product? @relation(fields: [productId], references: [id])
   chain   Chain    @relation(fields: [chainId], references: [id])
@@ -278,20 +275,33 @@ model Offer {
   @@map("offers")
 }
 
+model SearchLog {
+  id               BigInt   @id @default(autoincrement())
+  query            String
+  zoneSlug         String?  @map("zone_slug")
+  resultsCount     Int      @map("results_count")
+  clickedProductId String?  @map("clicked_product_id")
+  ipHash           String?  @map("ip_hash")
+  ts               DateTime @default(now())
+
+  @@index([query, ts])
+  @@map("search_logs")
+}
+
 // ============================================================================
 // Normalizer (F005 · C-001..C-006)
 // ============================================================================
 
 model NormalizerCandidate {
-  id         String   @id @default(cuid())
-  productAId String
-  productBId String
+  id         String    @id @default(cuid())
+  productAId String    @map("product_a_id")
+  productBId String    @map("product_b_id")
   confidence Float
   features   Json
-  status     String   @default("pending") // pending | approved | rejected
-  decidedBy  String?
-  decidedAt  DateTime?
-  createdAt  DateTime @default(now())
+  status     String    @default("pending")
+  decidedBy  String?   @map("decided_by")
+  decidedAt  DateTime? @map("decided_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
 
   @@unique([productAId, productBId])
   @@index([status, confidence])
@@ -300,39 +310,26 @@ model NormalizerCandidate {
 
 model NormalizerReject {
   id         String   @id @default(cuid())
-  productAId String
-  productBId String
+  productAId String   @map("product_a_id")
+  productBId String   @map("product_b_id")
   reason     String?
-  rejectedBy String
-  rejectedAt DateTime @default(now())
+  rejectedBy String   @map("rejected_by")
+  rejectedAt DateTime @default(now()) @map("rejected_at")
 
   @@unique([productAId, productBId])
   @@map("normalizer_rejects")
 }
 
-model SearchLog {
-  id               BigInt   @id @default(autoincrement())
-  query            String
-  zoneSlug         String?
-  resultsCount     Int
-  clickedProductId String?
-  ipHash           String?
-  ts               DateTime @default(now())
-
-  @@index([query, ts])
-  @@map("search_logs")
-}
-
 model IngestionRun {
   id           String          @id @default(cuid())
-  chainId      String
+  chainId      String          @map("chain_id")
   source       PriceSource
-  startedAt    DateTime        @default(now())
-  finishedAt   DateTime?
+  startedAt    DateTime        @default(now()) @map("started_at")
+  finishedAt   DateTime?       @map("finished_at")
   status       IngestionStatus @default(running)
-  rowsIngested Int             @default(0)
-  rowsSkipped  Int             @default(0)
-  errorMessage String?
+  rowsIngested Int             @default(0) @map("rows_ingested")
+  rowsSkipped  Int             @default(0) @map("rows_skipped")
+  errorMessage String?         @map("error_message")
   metadata     Json?
 
   chain Chain @relation(fields: [chainId], references: [id])

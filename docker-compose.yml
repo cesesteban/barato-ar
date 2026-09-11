@@ -1,0 +1,102 @@
+# Barato.ar · docker-compose.yml
+# Puertos elegidos libres en tu host:
+#   - App Next.js: 3900 → 3000 (contenedor)
+#   - Postgres:    5434 → 5432
+#   - Redis:       6380 → 6379
+#   - MailPit:     1025 (SMTP) / 8025 (UI)
+#
+# Comandos comunes:
+#   docker compose up -d db redis mailpit   # solo infra (usa `pnpm dev` local en 3900)
+#   docker compose up -d                    # stack completo con la app
+#   docker compose down                     # stop + limpieza (mantiene volúmenes)
+#   docker compose down -v                  # full reset (borra DB)
+
+name: barato-ar
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: barato-ar-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: barato
+      POSTGRES_PASSWORD: barato_dev_password
+      POSTGRES_DB: barato
+    ports:
+      - "5434:5432"
+    volumes:
+      - barato_db_data:/var/lib/postgresql/data
+      - ./docker/init-extensions.sql:/docker-entrypoint-initdb.d/00-extensions.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U barato -d barato"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: barato-ar-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - barato_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mailpit:
+    # Captura emails localmente para testear Auth.js magic links / F009 alerts.
+    # UI: http://localhost:8025 · SMTP: localhost:1025 (sin auth, sin TLS).
+    image: axllent/mailpit:latest
+    container_name: barato-ar-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  app:
+    # La app se levanta sólo si querés el stack completo dockerizado.
+    # Para desarrollo con hot reload usá `pnpm dev` local (evitá este servicio).
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: barato-ar-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    ports:
+      - "3900:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_APP_URL: http://localhost:3900
+      DATABASE_URL: postgresql://barato:barato_dev_password@db:5432/barato
+      DATABASE_URL_UNPOOLED: postgresql://barato:barato_dev_password@db:5432/barato
+      AUTH_SECRET: ${AUTH_SECRET:-dev-secret-please-change-me-1234567890}
+      AUTH_URL: http://localhost:3900
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-admin@barato.ar}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-dev-revalidate-secret-16b}
+      UPSTASH_REDIS_REST_URL: ""
+      UPSTASH_REDIS_REST_TOKEN: ""
+      # MailPit como SMTP para Auth.js (custom SMTP en Auth.js podría venir en un fix
+      # menor a lib/auth.ts; hoy usa smtp.resend.com — para dev sin Resend,
+      # sobreescribí AUTH_EMAIL_SMTP=* si lo necesitás).
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      R2_ACCOUNT_ID: ${R2_ACCOUNT_ID:-}
+      R2_ACCESS_KEY_ID: ${R2_ACCESS_KEY_ID:-}
+      R2_SECRET_ACCESS_KEY: ${R2_SECRET_ACCESS_KEY:-}
+
+volumes:
+  barato_db_data:
+  barato_redis_data:
