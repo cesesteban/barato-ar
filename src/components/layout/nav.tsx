@@ -6,14 +6,16 @@ import { Badge } from "@/components/ui/badge";
 
 export type NavProps = {
   /**
-   * Etiqueta de zona precalculada del lado servidor (ej. desde searchParams).
-   * Se ignora del lado cliente — NavZoneSlot lee el estado real vía hook.
+   * Etiqueta de zona precalculada del lado servidor (ej. `formatZoneLabel(zone)`
+   * usando searchParams.zone). Se usa como fallback del Suspense boundary del
+   * ZonePicker mientras el cliente hidrata — evita el flash de "Palermo, CABA"
+   * cuando el usuario está en otra zona.
    */
   zoneLabel?: string | undefined;
 };
 
 /** Nav desktop. Mobile usa `MobileBottomNav`. */
-export function Nav(_props: NavProps = {}) {
+export function Nav({ zoneLabel }: NavProps = {}) {
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-surface">
       <nav className="mx-auto flex h-16 max-w-7xl items-center gap-12 px-6" aria-label="Principal">
@@ -51,7 +53,7 @@ export function Nav(_props: NavProps = {}) {
           </li>
         </ul>
         <div className="ml-auto flex items-center gap-3">
-          <NavZoneSlot />
+          <NavZoneSlot ssrZoneLabel={zoneLabel} />
           <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
             <Link href="/reportar">Reportar oferta</Link>
           </Button>

@@ -28,6 +28,13 @@ export type ZonePickerProps = {
   trigger?: React.ReactNode;
   /** Si `true`, abre automáticamente cuando el usuario aún no eligió zona. */
   autoOpenOnFirstVisit?: boolean;
+  /**
+   * Etiqueta de zona a mostrar durante SSR / Suspense fallback.
+   * El caller server-side puede pasar `formatZoneLabel(searchParams.zone)`
+   * para evitar el flash del default (Palermo, CABA) cuando el usuario
+   * navegó desde otra zona.
+   */
+  ssrLabel?: string | undefined;
   className?: string;
 };
 
@@ -37,9 +44,8 @@ export type ZonePickerProps = {
  * prerender de páginas estáticas que rendericen este componente.
  */
 export function ZonePicker(props: ZonePickerProps) {
-  const fallback = props.trigger ?? (
-    <ZoneChip zoneLabel={formatZoneLabel(DEFAULT_ZONE_SLUG)} />
-  );
+  const label = props.ssrLabel ?? formatZoneLabel(DEFAULT_ZONE_SLUG);
+  const fallback = props.trigger ?? <ZoneChip zoneLabel={label} />;
   return (
     <Suspense fallback={<span className={props.className}>{fallback}</span>}>
       <ZonePickerInner {...props} />
