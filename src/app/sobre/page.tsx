@@ -39,6 +39,14 @@ export default function SobrePage() {
             <li>❌ No inventamos precios: cada uno tiene fuente y timestamp visibles.</li>
           </ul>
 
+          <h2 className="mt-8 text-2xl font-bold">¿Cómo nos financiamos?</h2>
+          <p className="text-text">
+            Cuando comprás por delivery a través de un link de Barato.ar, la plataforma
+            (PedidosYa, Rappi) puede darnos una pequeña comisión. Vos no pagás de más
+            por eso, y nunca priorizamos una plataforma sobre otra por comisión — el
+            orden depende solo del precio y la cercanía.
+          </p>
+
           <h2 className="mt-8 text-2xl font-bold">Fuentes de datos</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Card>
