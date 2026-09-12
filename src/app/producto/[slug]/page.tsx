@@ -209,6 +209,7 @@ function StoreSection({
   bestPrice: number | null;
 }) {
   if (rows.length === 0) return null;
+  const grouped = collapseSameChainPrice(rows);
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-baseline justify-between gap-4">
@@ -216,35 +217,70 @@ function StoreSection({
         <span className="text-2xs text-text-subtle">{subtitle}</span>
       </div>
       <Card padding="none">
-        {rows.map((row, i) => (
-          <PriceComparisonRow
-            key={row.storeId}
-            rank={i + 1}
-            storeName={row.storeName}
-            storeAddress={row.address ?? undefined}
-            chainSlug={row.chainSlug}
-            price={row.price}
-            previousPrice={row.previousPrice ?? undefined}
-            deltaVsAvgPct={row.deltaVsAvgPct ?? undefined}
-            distanceKm={row.distanceKm ?? undefined}
-            pricePerUnit={undefined}
-            promo={
-              row.promoType !== "unit"
-                ? {
-                    type: row.promoType,
-                    buyQty: row.promoBuyQty ?? undefined,
-                    payQty: row.promoPayQty ?? undefined,
-                    secondDiscountPct: row.promoSecondDiscountPct ?? undefined,
-                  }
-                : undefined
-            }
-            href={row.storeProductUrl ?? `/tienda/${row.chainSlug}`}
-            best={bestPrice === row.price && i === 0}
-          />
-        ))}
+        {grouped.map((row, i) => {
+          const label =
+            row.count > 1
+              ? `${row.chainName ?? row.storeName} · ${row.count} sucursales`
+              : row.storeName;
+          return (
+            <PriceComparisonRow
+              key={`${row.chainSlug}-${row.price}-${i}`}
+              rank={i + 1}
+              storeName={label}
+              storeAddress={row.address ?? undefined}
+              chainSlug={row.chainSlug}
+              price={row.price}
+              previousPrice={row.previousPrice ?? undefined}
+              deltaVsAvgPct={row.deltaVsAvgPct ?? undefined}
+              distanceKm={row.distanceKm ?? undefined}
+              pricePerUnit={undefined}
+              promo={
+                row.promoType !== "unit"
+                  ? {
+                      type: row.promoType,
+                      buyQty: row.promoBuyQty ?? undefined,
+                      payQty: row.promoPayQty ?? undefined,
+                      secondDiscountPct: row.promoSecondDiscountPct ?? undefined,
+                    }
+                  : undefined
+              }
+              href={row.storeProductUrl ?? `/tienda/${row.chainSlug}`}
+              best={bestPrice === row.price && i === 0}
+            />
+          );
+        })}
       </Card>
     </div>
   );
+}
+
+type GroupedRow = ComparisonStoreRow & { count: number; chainName?: string };
+
+/**
+ * Consolida filas del mismo (chain, price) — evita mostrar 4 sucursales Coto
+ * con idéntico precio (cadenas de super suelen tener pricing centralizado).
+ * Mantiene la sucursal más cercana como representante del grupo.
+ */
+function collapseSameChainPrice(rows: ComparisonStoreRow[]): GroupedRow[] {
+  const map = new Map<string, GroupedRow>();
+  for (const r of rows) {
+    const key = `${r.chainSlug}:${r.price}`;
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, { ...r, count: 1 });
+      continue;
+    }
+    existing.count += 1;
+    const existingDist = existing.distanceKm ?? Infinity;
+    const newDist = r.distanceKm ?? Infinity;
+    if (newDist < existingDist) {
+      existing.storeName = r.storeName;
+      existing.address = r.address;
+      existing.distanceKm = r.distanceKm;
+      existing.storeProductUrl = r.storeProductUrl;
+    }
+  }
+  return [...map.values()].sort((a, b) => a.price - b.price);
 }
 
 function MetaRow({ label, value }: { label: string; value: string | null | undefined }) {

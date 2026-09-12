@@ -27,7 +27,7 @@ program
       const summary = await runPclIngestion();
       const elapsed = ((Date.now() - started) / 1000).toFixed(1);
       console.info(
-        `[ingest] pcl status=${summary.status} stores=${summary.pass1.storesUpserted} products=${summary.pass2.productsUpserted} prices=${summary.pass3.pricesUpserted} deduped=${summary.pass3.rowsDedupedVsFlyer} elapsed=${elapsed}s`,
+        `[ingest] pcl status=${summary.status} commerces=${summary.commercesProcessed}/${summary.commercesProcessed + summary.commercesSkipped} stores=${summary.storesUpserted} products=${summary.productsUpserted} prices=${summary.pricesUpserted} skipped=${summary.rowsSkipped} chains=[${summary.chainIdsTouched.join(",")}] elapsed=${elapsed}s`,
       );
       if (summary.errorMessage) console.error(`[ingest] error: ${summary.errorMessage}`);
       process.exit(summary.status === "failed" ? 1 : 0);

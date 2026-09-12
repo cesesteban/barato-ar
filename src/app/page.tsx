@@ -18,6 +18,8 @@ async function safeFeed() {
       sort: "discount",
       limit: 8,
       includeNearby: true,
+      onlyBestPerProduct: true,
+      minChainCount: 1,
     });
   } catch (err) {
     // Build-time o DB caída: home igual renderiza con feed vacío. ISR lo

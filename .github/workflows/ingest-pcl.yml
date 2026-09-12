@@ -2,8 +2,12 @@ name: PCL Ingestion (SEPA)
 
 on:
   schedule:
-    - cron: "0 11 * * 2"   # martes 11:00 UTC = 8am ART
+    - cron: "0 12 * * *"   # diario 12:00 UTC = 9am ART, tras publicación SEPA
   workflow_dispatch:
+    inputs:
+      day_override:
+        description: "Override día (opcional: lunes|martes|...|domingo)"
+        required: false
 
 concurrency:
   group: ingest-pcl
@@ -12,7 +16,7 @@ concurrency:
 jobs:
   pcl:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 90
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL_UNPOOLED }}
       DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
@@ -20,8 +24,8 @@ jobs:
       AUTH_URL: ${{ secrets.AUTH_URL }}
       REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
-      SEPA_MANIFEST_URL: ${{ secrets.SEPA_MANIFEST_URL }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN_INGEST }}
+      SEPA_DAILY_URL: ${{ github.event.inputs.day_override && format('https://datos.produccion.gob.ar/dataset/6f47ec76-d1ce-4e34-a7e1-621fe9b1d0b5/resource/{0}/download/sepa_{1}.zip', 'placeholder', github.event.inputs.day_override) || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -32,3 +36,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm prisma generate
       - run: pnpm ingest pcl
+      - name: Refresh materialized view
+        if: success()
+        run: |
+          pnpm prisma db execute --stdin --schema prisma/schema.prisma <<'SQL'
+          REFRESH MATERIALIZED VIEW CONCURRENTLY price_daily_avg;
+          SQL
