@@ -17,6 +17,7 @@ import type { ComparisonStoreRow } from "@/server/product/types";
 import { productJsonLd } from "@/lib/jsonld";
 import { env } from "@/lib/env";
 import { formatPrice } from "@/lib/format-price";
+import { readAffiliateIds } from "@/lib/deep-links";
 
 export const revalidate = 3600;
 
@@ -187,7 +188,11 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
               </Card>
             ) : null}
 
-            <DeliveryLinks productName={data.product.name} brand={data.product.brand} />
+            <DeliveryLinks
+              productName={data.product.name}
+              brand={data.product.brand}
+              affiliateIds={readAffiliateIds()}
+            />
           </section>
         </div>
 

@@ -191,21 +191,20 @@ function pickPrice(row: SepaProductoRow): number | null {
 /**
  * Genera un identificador de producto para nuestro schema.
  *
- * Orden de preferencia:
- *   1. productos_ean válido (8-14 dígitos, no todo ceros)
- *   2. id_producto que sea EAN válido — Coto y Día suelen mandar
- *      productos_ean="0" y ponen el EAN real en id_producto (13 dígitos).
- *      Sin este paso perdemos el match multi-cadena.
- *   3. Fallback sintético con prefijo del comercio (solo productos que
- *      no publican EAN — el normalizer F005 los agrupa por fuzzy match).
+ * Solo aceptamos EAN reales (8-14 dígitos numéricos) para que el mismo producto
+ * en Coto/Carrefour/Día colapse en una única row Product — sin eso, perdemos
+ * el match multi-cadena que es el core del sitio.
+ *
+ * Los productos con SKU interno que no es EAN se descartan (retornamos null).
+ * Estos son la "long tail" de cada cadena: no se pueden comparar con las otras
+ * y no aportan a la vista de ofertas del MVP.
  */
 function resolveProductKey(row: SepaProductoRow): string | null {
   const ean = row.productos_ean?.trim() ?? "";
   if (isValidEan(ean)) return ean;
   const internal = row.id_producto.trim();
   if (isValidEan(internal)) return internal;
-  if (!internal || /^0+$/.test(internal)) return null;
-  return `sepa-${row.id_comercio}-${internal}`;
+  return null;
 }
 
 function isValidEan(candidate: string): boolean {

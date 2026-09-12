@@ -45,6 +45,13 @@ const envSchema = z.object({
   // Analytics
   NEXT_PUBLIC_PLAUSIBLE_DOMAIN: optionalString(z.string()),
 
+  // Affiliate IDs para deep links delivery (F014)
+  // Cuando exista deal con la plataforma, pegar acá el id/token que provean.
+  // Formato depende del partner (JSON string, id numérico, subdomain, etc.)
+  NEXT_PUBLIC_AFFILIATE_PEDIDOSYA: optionalString(z.string()),
+  NEXT_PUBLIC_AFFILIATE_RAPPI: optionalString(z.string()),
+  NEXT_PUBLIC_AFFILIATE_MERCADOLIBRE: optionalString(z.string()),
+
   // Redis (Upstash)
   UPSTASH_REDIS_REST_URL: optionalString(z.string().url()),
   UPSTASH_REDIS_REST_TOKEN: optionalString(z.string()),

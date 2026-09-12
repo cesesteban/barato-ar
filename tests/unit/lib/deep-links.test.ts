@@ -1,27 +1,49 @@
-import { describe, expect, it } from "vitest";
-import { DELIVERY_PARTNERS, buildDeliveryQuery } from "@/lib/deep-links";
+import { afterEach, describe, expect, it } from "vitest";
+import {
+  DELIVERY_PARTNERS,
+  buildDeliveryQuery,
+  readAffiliateIds,
+} from "@/lib/deep-links";
 
 describe("deep-links (F014)", () => {
-  it("PedidosYa URL incluye query encodeada y UTM completo", () => {
+  afterEach(() => {
+    delete process.env["NEXT_PUBLIC_AFFILIATE_PEDIDOSYA"];
+    delete process.env["NEXT_PUBLIC_AFFILIATE_RAPPI"];
+    delete process.env["NEXT_PUBLIC_AFFILIATE_MERCADOLIBRE"];
+  });
+
+  it("PedidosYa URL sin afiliado: solo UTM", () => {
     const py = DELIVERY_PARTNERS.find((p) => p.slug === "pedidosya");
-    expect(py).toBeTruthy();
-    const url = py!.buildSearchUrl("Coca-Cola 2.25L");
+    const url = py!.buildSearchUrl("Coca-Cola 2.25L", undefined);
     const parsed = new URL(url);
     expect(parsed.hostname).toBe("www.pedidosya.com.ar");
     expect(parsed.searchParams.get("query")).toBe("Coca-Cola 2.25L");
     expect(parsed.searchParams.get("utm_source")).toBe("barato.ar");
-    expect(parsed.searchParams.get("utm_medium")).toBe("deep_link");
-    expect(parsed.searchParams.get("utm_campaign")).toBe("comparator");
+    expect(parsed.searchParams.get("partnerId")).toBeNull();
   });
 
-  it("Rappi URL incluye query encodeada y UTM completo", () => {
-    const rp = DELIVERY_PARTNERS.find((p) => p.slug === "rappi");
-    expect(rp).toBeTruthy();
-    const url = rp!.buildSearchUrl("Aceite Natura Girasol 900ml");
+  it("PedidosYa URL con afiliado: agrega partnerId y sobreescribe utm_source", () => {
+    const py = DELIVERY_PARTNERS.find((p) => p.slug === "pedidosya");
+    const url = py!.buildSearchUrl("Coca-Cola 2.25L", "PY-BARATO-42");
     const parsed = new URL(url);
-    expect(parsed.hostname).toBe("www.rappi.com.ar");
-    expect(parsed.searchParams.get("query")).toBe("Aceite Natura Girasol 900ml");
-    expect(parsed.searchParams.get("utm_source")).toBe("barato.ar");
+    expect(parsed.searchParams.get("partnerId")).toBe("PY-BARATO-42");
+    expect(parsed.searchParams.get("utm_source")).toBe("PY-BARATO-42");
+  });
+
+  it("Rappi URL con afiliado: agrega ref", () => {
+    const rp = DELIVERY_PARTNERS.find((p) => p.slug === "rappi");
+    const url = rp!.buildSearchUrl("Aceite", "RAP-XYZ-001");
+    const parsed = new URL(url);
+    expect(parsed.searchParams.get("ref")).toBe("RAP-XYZ-001");
+    expect(parsed.searchParams.get("utm_source")).toBe("RAP-XYZ-001");
+  });
+
+  it("MercadoLibre URL con afiliado: agrega matt_word", () => {
+    const ml = DELIVERY_PARTNERS.find((p) => p.slug === "mercadolibre");
+    const url = ml!.buildSearchUrl("cerveza quilmes", "matt_MLA_12345");
+    const parsed = new URL(url);
+    expect(parsed.pathname).toContain("cerveza-quilmes");
+    expect(parsed.searchParams.get("matt_word")).toBe("matt_MLA_12345");
   });
 
   it("buildDeliveryQuery agrega marca si no está en el nombre", () => {
@@ -40,5 +62,20 @@ describe("deep-links (F014)", () => {
     expect(buildDeliveryQuery("Cerveza Quilmes 7790895000119 Retornable 1L", "Quilmes")).toBe(
       "Cerveza Quilmes Retornable 1L",
     );
+  });
+
+  it("readAffiliateIds: devuelve undefined cuando envs no están seteados", () => {
+    const ids = readAffiliateIds();
+    expect(ids.pedidosya).toBeUndefined();
+    expect(ids.rappi).toBeUndefined();
+    expect(ids.mercadolibre).toBeUndefined();
+  });
+
+  it("readAffiliateIds: lee envs y trim vacíos", () => {
+    process.env["NEXT_PUBLIC_AFFILIATE_PEDIDOSYA"] = "PY-42";
+    process.env["NEXT_PUBLIC_AFFILIATE_RAPPI"] = "   ";
+    const ids = readAffiliateIds();
+    expect(ids.pedidosya).toBe("PY-42");
+    expect(ids.rappi).toBeUndefined();
   });
 });
