@@ -73,6 +73,9 @@ export async function ingestProductos(
   const productCache = new Map<string, ProductCacheEntry>();
   const priceBatch: PricePayload[] = [];
   const historyBatch: HistoryPayload[] = [];
+  // Dedup por (producto, cadena, precio): Coto/Día/Cencosud tienen pricing
+  // centralizado — 100+ sucursales de la misma cadena tienen el mismo precio
+  // para el mismo producto. Insertamos 1 row representativa por combinación.
   const seenPrice = new Set<string>();
 
   const result: Pass2Result = {
@@ -118,9 +121,10 @@ export async function ingestProductos(
       result.productsUpserted++;
     }
 
-    const priceKey = `${product.productId}:${store.storeId}`;
+    // Dedup a nivel (product, chain, price) — no per-store.
+    // Redondeamos precio a int (centavos irrelevantes en pricing centralizado).
+    const priceKey = `${product.productId}:${store.chainId}:${Math.round(price * 100)}`;
     if (seenPrice.has(priceKey)) {
-      // duplicado dentro del mismo commerce zip — mantenemos el primer valor
       result.rowsSkipped++;
       continue;
     }
