@@ -18,6 +18,8 @@ import { productJsonLd } from "@/lib/jsonld";
 import { env } from "@/lib/env";
 import { formatPrice } from "@/lib/format-price";
 import { readAffiliateIds } from "@/lib/deep-links";
+import { productHref, tiendaHref } from "@/lib/urls";
+import { formatZoneLabel, getZoneBySlug } from "@/lib/zones-catalog";
 
 export const revalidate = 3600;
 
@@ -80,7 +82,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
   });
 
   return (
-    <PageShell zoneLabel={zone.replace("caba-", "").replace(/-/g, " ")}>
+    <PageShell zoneLabel={formatZoneLabel(zone)}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonld) }} />
       <div className="mx-auto max-w-6xl px-6 py-10">
         <nav aria-label="Breadcrumb" className="mb-4 flex items-center gap-2 text-xs text-text-subtle">
@@ -153,18 +155,21 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
                   subtitle="Sucursales dentro de tu zona"
                   rows={data.stores.inZone}
                   bestPrice={bestPrice}
+                  zone={zone}
                 />
                 <StoreSection
                   title={`Cerca de ${prettyZone(zone)}`}
                   subtitle="Sucursales a menos de 3 km"
                   rows={data.stores.nearby}
                   bestPrice={bestPrice}
+                  zone={zone}
                 />
                 <StoreSection
                   title="Cadenas nacionales"
                   subtitle="Precios de referencia por cadena"
                   rows={data.stores.national}
                   bestPrice={bestPrice}
+                  zone={zone}
                 />
               </>
             )}
@@ -179,7 +184,7 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
                     <p className="mt-1 text-sm text-text">{data.variantOfPackaging.name}</p>
                   </div>
                   <Link
-                    href={`/producto/${data.variantOfPackaging.slug}?zone=${encodeURIComponent(zone)}`}
+                    href={productHref(data.variantOfPackaging.slug, zone)}
                     className="text-sm font-semibold text-primary hover:underline"
                   >
                     Ir →
@@ -210,11 +215,13 @@ function StoreSection({
   subtitle,
   rows,
   bestPrice,
+  zone,
 }: {
   title: string;
   subtitle: string;
   rows: ComparisonStoreRow[];
   bestPrice: number | null;
+  zone: string;
 }) {
   if (rows.length === 0) return null;
   const grouped = collapseSameChainPrice(rows);
@@ -252,7 +259,7 @@ function StoreSection({
                     }
                   : undefined
               }
-              href={row.storeProductUrl ?? `/tienda/${row.chainSlug}`}
+              href={row.storeProductUrl ?? tiendaHref(row.chainSlug, zone)}
               best={bestPrice === row.price && i === 0}
             />
           );
@@ -307,12 +314,11 @@ function pickString(v: string | string[] | undefined): string | undefined {
 }
 
 function prettyZone(slug: string): string {
+  // Nombre corto (sin sufijo región) para títulos "En X" / "Cerca de X".
+  const entry = getZoneBySlug(slug);
+  if (entry) return entry.name;
   if (slug === "caba") return "CABA";
   if (slug === "pba") return "PBA";
-  return slug
-    .replace(/^caba-/, "")
-    .replace(/^pba-gba-/, "GBA ")
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
