@@ -1,6 +1,7 @@
 export * from "./alert-card";
 export * from "./chain-badge";
 export * from "./deal-card";
+export * from "./delivery-links";
 export * from "./deal-card-compact";
 export * from "./discount-badge";
 export * from "./expired-badge";

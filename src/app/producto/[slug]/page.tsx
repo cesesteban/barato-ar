@@ -6,6 +6,7 @@ import { Alert, Card, CardBody } from "@/components/ui";
 import {
   AlertCard,
   ConsultarBadge,
+  DeliveryLinks,
   PriceComparisonRow,
   PriceHistoryCard,
   PriceTag,
@@ -185,6 +186,8 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
                 </CardBody>
               </Card>
             ) : null}
+
+            <DeliveryLinks productName={data.product.name} brand={data.product.brand} />
           </section>
         </div>
 
