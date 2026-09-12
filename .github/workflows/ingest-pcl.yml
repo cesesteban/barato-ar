@@ -36,9 +36,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm prisma generate
       - run: pnpm ingest pcl
-      - name: Refresh materialized view
+      - name: Refresh materialized view + purge old prices (14d TTL)
         if: success()
         run: |
           pnpm prisma db execute --stdin --schema prisma/schema.prisma <<'SQL'
           REFRESH MATERIALIZED VIEW CONCURRENTLY price_daily_avg;
+          DELETE FROM prices WHERE captured_at < NOW() - INTERVAL '14 days';
+          DELETE FROM price_history WHERE captured_at < NOW() - INTERVAL '90 days';
           SQL

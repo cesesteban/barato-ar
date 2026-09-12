@@ -1,16 +1,19 @@
 import Link from "next/link";
 import { Logo } from "./logo";
-import { ZoneChip } from "@/components/domain/zone-chip";
+import { NavZoneSlot } from "./nav-zone-slot";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 export type NavProps = {
+  /**
+   * Etiqueta de zona precalculada del lado servidor (ej. desde searchParams).
+   * Se ignora del lado cliente — NavZoneSlot lee el estado real vía hook.
+   */
   zoneLabel?: string | undefined;
-  onChangeZone?: (() => void) | undefined;
 };
 
 /** Nav desktop. Mobile usa `MobileBottomNav`. */
-export function Nav({ zoneLabel = "Palermo, CABA", onChangeZone }: NavProps) {
+export function Nav(_props: NavProps = {}) {
   return (
     <header className="sticky top-0 z-[var(--z-sticky)] border-b border-border bg-surface">
       <nav className="mx-auto flex h-16 max-w-7xl items-center gap-12 px-6" aria-label="Principal">
@@ -48,7 +51,7 @@ export function Nav({ zoneLabel = "Palermo, CABA", onChangeZone }: NavProps) {
           </li>
         </ul>
         <div className="ml-auto flex items-center gap-3">
-          <ZoneChip zoneLabel={zoneLabel} onChangeZone={onChangeZone} />
+          <NavZoneSlot />
           <Button asChild variant="secondary" size="sm" className="hidden sm:inline-flex">
             <Link href="/reportar">Reportar oferta</Link>
           </Button>
