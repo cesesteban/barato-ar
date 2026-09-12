@@ -4,16 +4,24 @@ import {
   DEFAULT_ZONE_SLUG,
   getZoneBySlug,
   formatZoneLabel,
+  groupZonesByRegion,
   nearestZone,
 } from "@/lib/zones-catalog";
 
-describe("zones-catalog (F015)", () => {
-  it("catálogo tiene 15 zonas y cubre CABA + GBA", () => {
-    expect(ZONES_CATALOG).toHaveLength(15);
-    const caba = ZONES_CATALOG.filter((z) => z.region === "CABA");
-    const gba = ZONES_CATALOG.filter((z) => z.region === "GBA");
-    expect(caba.length).toBe(11);
-    expect(gba.length).toBe(4);
+describe("zones-catalog (F015+F016)", () => {
+  it("catálogo cubre CABA + 3 sub-regiones GBA con localidades", () => {
+    const groups = groupZonesByRegion();
+    expect(groups.map((g) => g.region)).toEqual(["CABA", "GBA Norte", "GBA Oeste", "GBA Sur"]);
+    // Cada región tiene al menos 2 entradas (localidades + fallback umbrella)
+    for (const g of groups) {
+      expect(g.zones.length).toBeGreaterThanOrEqual(2);
+      // Última entrada debe ser umbrella
+      expect(g.zones[g.zones.length - 1]?.umbrella).toBe(true);
+    }
+  });
+
+  it("catálogo total: 11 CABA + 6 Norte + 7 Oeste + 8 Sur = 32", () => {
+    expect(ZONES_CATALOG).toHaveLength(32);
   });
 
   it("default zone existe en el catálogo", () => {
@@ -24,35 +32,38 @@ describe("zones-catalog (F015)", () => {
     expect(getZoneBySlug("nonexistent")).toBeNull();
   });
 
-  it("formatZoneLabel añade sufijo CABA a barrios porteños", () => {
+  it("formatZoneLabel para barrio CABA: 'Palermo, CABA'", () => {
     expect(formatZoneLabel("caba-palermo")).toBe("Palermo, CABA");
   });
 
-  it("formatZoneLabel no añade sufijo a zonas GBA", () => {
-    expect(formatZoneLabel("pba-gba-norte")).toBe("GBA Norte");
+  it("formatZoneLabel para localidad GBA: 'San Isidro, GBA Norte'", () => {
+    expect(formatZoneLabel("pba-san-isidro")).toBe("San Isidro, GBA Norte");
   });
 
-  it("formatZoneLabel devuelve slug crudo si no está en catálogo", () => {
-    expect(formatZoneLabel("xyz")).toBe("xyz");
+  it("formatZoneLabel para umbrella: nombre tal cual", () => {
+    expect(formatZoneLabel("pba-gba-norte")).toBe("Otras zonas GBA Norte");
+    expect(formatZoneLabel("caba")).toBe("Otras zonas CABA");
   });
 
-  it("nearestZone para lat/lng de Palermo devuelve caba-palermo", () => {
-    const near = nearestZone(-34.5875, -58.43);
-    expect(near.slug).toBe("caba-palermo");
+  it("nearestZone Palermo → caba-palermo", () => {
+    expect(nearestZone(-34.5875, -58.43).slug).toBe("caba-palermo");
   });
 
-  it("nearestZone para lat/lng de Tigre devuelve pba-gba-norte", () => {
-    const near = nearestZone(-34.42, -58.58);
-    expect(near.slug).toBe("pba-gba-norte");
+  it("nearestZone Tigre lat/lng → pba-tigre (localidad específica, no umbrella)", () => {
+    expect(nearestZone(-34.4237, -58.5793).slug).toBe("pba-tigre");
   });
 
-  it("nearestZone para lat/lng de Quilmes devuelve pba-gba-sur", () => {
-    const near = nearestZone(-34.72, -58.26);
-    expect(near.slug).toBe("pba-gba-sur");
+  it("nearestZone Quilmes → pba-quilmes", () => {
+    expect(nearestZone(-34.7207, -58.2543).slug).toBe("pba-quilmes");
   });
 
-  it("nearestZone para lat/lng de Villa Crespo devuelve caba-villa-crespo", () => {
-    const near = nearestZone(-34.6006, -58.438);
-    expect(near.slug).toBe("caba-villa-crespo");
+  it("nearestZone Morón → pba-moron", () => {
+    expect(nearestZone(-34.6534, -58.6198).slug).toBe("pba-moron");
+  });
+
+  it("nearestZone excluye umbrellas — nunca devuelve pba-gba-*", () => {
+    const near = nearestZone(-34.5, -58.53); // aprox centroide GBA Norte
+    expect(near.umbrella).toBeFalsy();
+    expect(near.slug.startsWith("pba-gba-")).toBe(false);
   });
 });

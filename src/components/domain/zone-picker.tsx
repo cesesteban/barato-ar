@@ -13,11 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import {
-  ZONES_CATALOG,
   DEFAULT_ZONE_SLUG,
   formatZoneLabel,
+  groupZonesByRegion,
   nearestZone,
   type ZoneEntry,
+  type ZoneRegion,
 } from "@/lib/zones-catalog";
 import { ZoneChip } from "./zone-chip";
 import { useZone } from "@/hooks/use-zone";
@@ -64,8 +65,7 @@ function ZonePickerInner({ trigger, autoOpenOnFirstVisit = false, className }: Z
     setOpen(true);
   }, [autoOpenOnFirstVisit, hydrated, hasExplicitChoice]);
 
-  const caba = ZONES_CATALOG.filter((z) => z.region === "CABA");
-  const gba = ZONES_CATALOG.filter((z) => z.region === "GBA");
+  const groups = groupZonesByRegion();
 
   const handleGeolocation = () => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -142,8 +142,15 @@ function ZonePickerInner({ trigger, autoOpenOnFirstVisit = false, className }: Z
         </div>
 
         <div className="mt-4 max-h-[60vh] overflow-y-auto pr-1">
-          <ZoneGroup title="CABA" zones={caba} currentSlug={zone} onPick={handlePick} />
-          <ZoneGroup title="Gran Buenos Aires" zones={gba} currentSlug={zone} onPick={handlePick} />
+          {groups.map((g) => (
+            <ZoneGroup
+              key={g.region}
+              title={g.region}
+              zones={g.zones}
+              currentSlug={zone}
+              onPick={handlePick}
+            />
+          ))}
         </div>
       </DialogContent>
     </Dialog>
@@ -156,7 +163,7 @@ function ZoneGroup({
   currentSlug,
   onPick,
 }: {
-  title: string;
+  title: ZoneRegion;
   zones: ZoneEntry[];
   currentSlug: string;
   onPick: (slug: string) => void;
