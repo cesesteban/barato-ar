@@ -7,6 +7,8 @@ import { ChainBadge, DealCard } from "@/components/domain";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
 import { runOffers } from "@/server/offers/service";
+import { formatZoneLabel } from "@/lib/zones-catalog";
+import { productHref } from "@/lib/urls";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 300;
@@ -88,7 +90,7 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
   const verticalLabel = VERTICAL_LABEL[chain.vertical] ?? chain.vertical;
 
   return (
-    <PageShell zoneLabel={zone}>
+    <PageShell zoneLabel={formatZoneLabel(zone)}>
       <article className="mx-auto max-w-7xl px-6 py-10">
         <header className="mb-8 flex flex-col gap-3">
           <div className="flex items-center gap-2 text-2xs uppercase tracking-wider text-text-subtle">
@@ -173,7 +175,7 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
                         : undefined
                     }
                     distanceKm={o.distanceKm ?? undefined}
-                    href={`/producto/${o.productSlug}?zone=${encodeURIComponent(zone)}`}
+                    href={productHref(o.productSlug, zone)}
                   />
                 ))}
               </div>

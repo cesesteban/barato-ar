@@ -4,13 +4,15 @@ import { Badge, Button, Card, CardBody } from "@/components/ui";
 import { DealCard, SearchBar } from "@/components/domain";
 import { runOffers } from "@/server/offers/service";
 import { Bell, Search, TrendingDown } from "lucide-react";
+import { DEFAULT_ZONE_SLUG, formatZoneLabel, getZoneBySlug } from "@/lib/zones-catalog";
+import { productHref } from "@/lib/urls";
 
 export const revalidate = 300;
 
-async function safeFeed() {
+async function safeFeed(zone: string) {
   try {
     return await runOffers({
-      zone: "caba-palermo",
+      zone,
       chains: [],
       minDiscount: 0,
       maxDistanceKm: 5,
@@ -35,11 +37,23 @@ async function safeFeed() {
   }
 }
 
-export default async function HomePage() {
-  const feed = await safeFeed();
+type HomeProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function pickZone(sp: Record<string, string | string[] | undefined>): string {
+  const raw = sp["zone"];
+  const val = Array.isArray(raw) ? raw[0] : raw;
+  return val && getZoneBySlug(val) ? val : DEFAULT_ZONE_SLUG;
+}
+
+export default async function HomePage({ searchParams }: HomeProps) {
+  const sp = await searchParams;
+  const zone = pickZone(sp);
+  const feed = await safeFeed(zone);
 
   return (
-    <PageShell zoneLabel="Palermo, CABA">
+    <PageShell zoneLabel={formatZoneLabel(zone)}>
       <section className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-6 py-16 text-center">
         <Badge variant="primary" className="gap-1">
           <span className="size-2 rounded-full bg-savings" aria-hidden />
@@ -131,7 +145,7 @@ export default async function HomePage() {
                   it.validTo ? `Válida hasta ${new Date(it.validTo).toISOString().slice(5, 10)}` : undefined
                 }
                 distanceKm={it.distanceKm ?? undefined}
-                href={`/producto/${it.productSlug}`}
+                href={productHref(it.productSlug, zone)}
               />
             ))}
           </div>

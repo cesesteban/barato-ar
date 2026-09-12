@@ -4,6 +4,8 @@ import { Alert, Badge, Card, CardBody } from "@/components/ui";
 import { DealCard } from "@/components/domain";
 import { runOffers } from "@/server/offers/service";
 import { OffersParamsSchema, type OfferListing } from "@/server/offers/schemas";
+import { formatZoneLabel } from "@/lib/zones-catalog";
+import { productHref } from "@/lib/urls";
 import { FiltersSidebar, ActiveChips, InfiniteLoader } from "./_client";
 
 export const dynamic = "force-dynamic";
@@ -41,7 +43,7 @@ export default async function OfertasPage({ searchParams }: PageProps) {
     );
   }
   const initial = await runOffers(parsed.data);
-  const zoneLabel = prettyZone(parsed.data.zone);
+  const zoneLabel = formatZoneLabel(parsed.data.zone);
 
   return (
     <PageShell zoneLabel={zoneLabel}>
@@ -85,7 +87,7 @@ export default async function OfertasPage({ searchParams }: PageProps) {
   );
 }
 
-export function OffersGrid({ items }: { items: OfferListing[] }) {
+export function OffersGrid({ items, zone }: { items: OfferListing[]; zone: string }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {items.map((it) => (
@@ -119,7 +121,7 @@ export function OffersGrid({ items }: { items: OfferListing[] }) {
           }
           validUntilLabel={it.validTo ? `Válida hasta ${new Date(it.validTo).toISOString().slice(5, 10)}` : undefined}
           distanceKm={it.distanceKm ?? undefined}
-          href={`/producto/${it.productSlug}`}
+          href={productHref(it.productSlug, zone)}
         />
       ))}
     </div>
@@ -131,12 +133,3 @@ function pick(v: string | string[] | undefined): string | undefined {
   return v;
 }
 
-function prettyZone(slug: string): string {
-  if (slug === "caba") return "CABA";
-  if (slug === "pba") return "PBA";
-  return slug
-    .replace(/^caba-/, "")
-    .replace(/^pba-gba-/, "GBA ")
-    .replace(/-/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}

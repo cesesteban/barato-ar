@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Checkbox, Chip, Label } from "@/components/ui";
 import { NeighborsToggle } from "@/components/domain";
 import { DealCard } from "@/components/domain";
+import { productHref } from "@/lib/urls";
 import type { OffersParams, OfferListing } from "@/server/offers/schemas";
 
 type Facets = {
@@ -293,7 +294,7 @@ export function InfiniteLoader({
               it.validTo ? `Válida hasta ${new Date(it.validTo).toISOString().slice(5, 10)}` : undefined
             }
             distanceKm={it.distanceKm ?? undefined}
-            href={`/producto/${it.productSlug}`}
+            href={productHref(it.productSlug, params.zone)}
           />
         ))}
       </div>
