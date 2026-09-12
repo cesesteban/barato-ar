@@ -21,6 +21,20 @@ export const OffersParamsSchema = z.object({
       return Boolean(v);
     }, z.boolean())
     .default(true),
+  /**
+   * Cuando true, dedup a nivel producto: solo la cadena más barata por producto
+   * (mejor oferta) y `discountPct` se computa vs promedio del producto en las
+   * demás cadenas. Requiere `minChainCount` cadenas o más con precio.
+   */
+  onlyBestPerProduct: z
+    .preprocess((v) => {
+      if (v == null) return true;
+      if (typeof v === "boolean") return v;
+      if (typeof v === "string") return !/^(false|0|no)$/i.test(v);
+      return Boolean(v);
+    }, z.boolean())
+    .default(true),
+  minChainCount: z.coerce.number().int().min(1).max(20).default(1),
 });
 export type OffersParams = z.infer<typeof OffersParamsSchema>;
 

@@ -48,7 +48,7 @@ export async function fetchOffers(params: OffersParams, zoneCenter?: { lat: numb
   const chainFilter = params.chains.length > 0 ? Prisma.sql`AND c.slug = ANY(${params.chains}::text[])` : Prisma.empty;
   const verticalFilter = params.vertical ? Prisma.sql`AND c.vertical::text = ${params.vertical}` : Prisma.empty;
   const cursorFilter = cursor
-    ? Prisma.sql`AND (score, pr.id) < (${cursor.score}, ${cursor.id})`
+    ? Prisma.sql`AND (score, id) < (${cursor.score}, ${cursor.id})`
     : Prisma.empty;
 
   const orderBy = orderClause(params.sort);
@@ -67,26 +67,65 @@ export async function fetchOffers(params: OffersParams, zoneCenter?: { lat: numb
         AND (pr.valid_to IS NULL OR pr.valid_to > NOW())
       ORDER BY pr.product_id, pr.store_id, pr.captured_at DESC
     ),
+    per_product AS (
+      SELECT
+        l.product_id,
+        MIN(l.price) AS min_price,
+        AVG(l.price) AS avg_price,
+        COUNT(DISTINCT s.chain_id) AS chain_count
+      FROM latest l
+      JOIN stores s ON s.id = l.store_id
+      GROUP BY l.product_id
+    ),
+    dedup AS (
+      SELECT DISTINCT ON (l.product_id) l.*, pp.avg_price, pp.chain_count
+      FROM latest l
+      JOIN per_product pp ON pp.product_id = l.product_id
+      WHERE (
+        ${params.onlyBestPerProduct}::boolean = false
+        OR l.price = pp.min_price
+      )
+      AND pp.chain_count >= ${params.minChainCount}
+      ORDER BY l.product_id, l.captured_at DESC, l.store_id
+    ),
     filtered AS (
       SELECT
-        l.*, p.slug AS product_slug, p.name AS product_name, p.brand AS product_brand,
+        d.id, d.product_id, d.store_id, d.price, d.previous_price,
+        COALESCE(
+          d.discount_pct,
+          CASE
+            WHEN d.avg_price > d.price AND d.chain_count >= 2
+            THEN ROUND(((d.avg_price - d.price) / d.avg_price * 100)::numeric, 1)::float
+            ELSE NULL
+          END
+        )::float AS discount_pct,
+        d.price_per_unit, d.price_per_unit_eff,
+        d.promo_type, d.promo_buy_qty, d.promo_pay_qty,
+        d.promo_second_discount_pct, d.valid_to, d.captured_at, d.upvotes_cache,
+        p.slug AS product_slug, p.name AS product_name, p.brand AS product_brand,
         p.image_url AS product_image_url,
         p.standard_unit,
         p.standard_size::text AS standard_size,
         s.name AS store_name, s.zone_id, s.lat AS store_lat, s.lng AS store_lng,
         s.is_virtual, c.slug AS chain_slug, c.name AS chain_name,
         (
-          COALESCE(l.discount_pct, 0) * 0.6 / 100.0
-          + GREATEST(0.0, (7.0 - EXTRACT(EPOCH FROM (NOW() - l.captured_at)) / 86400.0)) * 0.05
-          + LEAST(l.upvotes_cache::float / 100.0, 1.0) * 0.2
+          COALESCE(
+            d.discount_pct,
+            CASE WHEN d.avg_price > d.price AND d.chain_count >= 2
+              THEN (d.avg_price - d.price) / d.avg_price * 100
+              ELSE 0
+            END
+          ) * 0.6 / 100.0
+          + GREATEST(0.0, (7.0 - EXTRACT(EPOCH FROM (NOW() - d.captured_at)) / 86400.0)) * 0.05
+          + LEAST(d.upvotes_cache::float / 100.0, 1.0) * 0.2
           + CASE WHEN s.zone_id = ${params.zone} THEN 0.15 ELSE 0 END
+          + LEAST(d.chain_count::float / 5.0, 1.0) * 0.15
         ) AS score
-      FROM latest l
-      JOIN products p ON p.id = l.product_id AND p.canonical_id IS NULL
-      JOIN stores s ON s.id = l.store_id
+      FROM dedup d
+      JOIN products p ON p.id = d.product_id AND p.canonical_id IS NULL
+      JOIN stores s ON s.id = d.store_id
       JOIN chains c ON c.id = s.chain_id
-      WHERE COALESCE(l.discount_pct, 0) >= ${params.minDiscount}
-        AND (l.valid_to IS NULL OR l.valid_to > NOW() - INTERVAL '${Prisma.raw(String(validityInterval))} days')
+      WHERE (d.valid_to IS NULL OR d.valid_to > NOW() - INTERVAL '${Prisma.raw(String(validityInterval))} days')
         AND (
           s.zone_id = ${params.zone}
           OR s.is_virtual = true
@@ -100,7 +139,8 @@ export async function fetchOffers(params: OffersParams, zoneCenter?: { lat: numb
         ${verticalFilter}
     )
     SELECT * FROM filtered
-    ${cursorFilter ? Prisma.sql`WHERE 1=1 ${cursorFilter}` : Prisma.empty}
+    WHERE COALESCE(discount_pct, 0) >= ${params.minDiscount}
+    ${cursorFilter}
     ${orderBy}
     LIMIT ${params.limit + 1}
   `);
