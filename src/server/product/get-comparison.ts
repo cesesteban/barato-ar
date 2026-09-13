@@ -40,12 +40,10 @@ type LatestPriceRow = {
   price_per_unit_eff: string | null;
 };
 
-// Defaults ajustados para AMBA: barrios CABA son ~3km pero municipios GBA
-// ~10-15km. 10 captura el municipio propio + el vecino inmediato sin ser ruido.
+// 10km a la redonda de la zona del usuario. Stores virtuales (delivery
+// online, sin lat/lng) siempre se mantienen — son relevantes en cualquier zona.
 const DEFAULT_NEARBY_RADIUS_KM = 10;
-// Cap para el bucket "nacional": stores más lejos que esto son irrelevantes
-// para el usuario a menos que sean virtual (delivery online).
-const REGIONAL_MAX_KM = 30;
+const REGIONAL_MAX_KM = 10;
 
 export async function getComparison(params: GetComparisonParams): Promise<ComparisonView | null> {
   const { slug, zoneSlug, includeNearby = true, nearbyRadiusKm = DEFAULT_NEARBY_RADIUS_KM } = params;

@@ -76,7 +76,7 @@ export default async function TiendaPage({ params, searchParams }: PageProps) {
       chains: [slug],
       vertical: undefined,
       minDiscount: 0,
-      maxDistanceKm: 5,
+      maxDistanceKm: 10,
       validity: "week",
       sort: "discount",
       cursor: undefined,

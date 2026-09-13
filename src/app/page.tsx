@@ -15,7 +15,7 @@ async function safeFeed(zone: string) {
       zone,
       chains: [],
       minDiscount: 0,
-      maxDistanceKm: 5,
+      maxDistanceKm: 10,
       validity: "week",
       sort: "discount",
       limit: 8,
