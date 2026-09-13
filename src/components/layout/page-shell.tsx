@@ -3,6 +3,7 @@ import { Nav } from "./nav";
 import { Footer } from "./footer";
 import { MobileBottomNav } from "./mobile-bottom-nav";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { StoreClickTracker } from "@/components/analytics/store-click-tracker";
 
 export type PageShellProps = {
   children: ReactNode;
@@ -22,6 +23,7 @@ export function PageShell({ children, zoneLabel, hideFooter, hideMobileNav }: Pa
         </main>
         {!hideFooter ? <Footer /> : null}
         {!hideMobileNav ? <MobileBottomNav /> : null}
+        <StoreClickTracker />
       </div>
     </TooltipProvider>
   );

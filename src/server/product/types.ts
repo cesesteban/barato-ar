@@ -23,6 +23,7 @@ export type ComparisonStoreRow = {
   validTo: Date | null;
   source: string;
   storeProductUrl: string | null;
+  chainWebsiteUrl: string | null;
   distanceKm: number | null;
   proximity: Proximity;
   deltaVsAvgPct: number | null;

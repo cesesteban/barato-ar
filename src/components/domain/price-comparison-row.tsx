@@ -4,12 +4,14 @@ import { PriceTag } from "./price-tag";
 import { PromoBadge, type PromoType } from "./promo-badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
+import { resolveStoreLink } from "@/lib/store-links";
 
 export type PriceComparisonRowProps = {
   rank: number;
   storeName: string;
   storeAddress?: string | undefined;
   chainSlug: string;
+  chainName?: string | undefined;
   price: number;
   previousPrice?: number | undefined;
   deltaVsAvgPct?: number | undefined;
@@ -24,7 +26,18 @@ export type PriceComparisonRowProps = {
       }
     | undefined;
   proximity?: "in_zone" | "nearby" | undefined;
+  /**
+   * Fallback href — se usa solo si `resolveStoreLink` no puede armar un link
+   * externo (chain sin builder ni websiteUrl). Preferido cuando F019 activo:
+   * pasar `productName`, `brand`, `storeProductUrl`, `chainWebsiteUrl`
+   * para que el component genere link externo a la tienda.
+   */
   href: string;
+  /** Props F019 para armar link externo a la tienda. Opcionales para BC. */
+  productName?: string | undefined;
+  brand?: string | null | undefined;
+  storeProductUrl?: string | null | undefined;
+  chainWebsiteUrl?: string | null | undefined;
   best?: boolean | undefined;
   className?: string | undefined;
 };
@@ -34,6 +47,7 @@ export function PriceComparisonRow({
   storeName,
   storeAddress,
   chainSlug,
+  chainName,
   price,
   previousPrice,
   deltaVsAvgPct,
@@ -41,9 +55,29 @@ export function PriceComparisonRow({
   pricePerUnit,
   promo,
   href,
+  productName,
+  brand,
+  storeProductUrl,
+  chainWebsiteUrl,
   best,
   className,
 }: PriceComparisonRowProps) {
+  // F019: si tenemos productName, intentamos armar link externo.
+  const externalHref = productName
+    ? resolveStoreLink({
+        chainSlug,
+        productName,
+        brand,
+        storeProductUrl,
+        chainWebsiteUrl,
+      })
+    : null;
+  const resolvedHref = externalHref ?? chainWebsiteUrl ?? href;
+  const isExternal = /^https?:\/\//.test(resolvedHref);
+  const linkAriaLabel = isExternal
+    ? `Ir a la tienda de ${chainName ?? chainSlug} (abre en nueva pestaña)`
+    : `Ir a la tienda de ${chainName ?? chainSlug}`;
+
   return (
     <div
       className={cn(
@@ -87,7 +121,20 @@ export function PriceComparisonRow({
         {typeof distanceKm === "number" ? `${distanceKm.toFixed(1)} km` : "—"}
       </span>
       <Button variant={best ? "primary" : "secondary"} size="sm" asChild>
-        <Link href={href}>Ir a la tienda →</Link>
+        <Link
+          href={resolvedHref}
+          {...(isExternal
+            ? {
+                target: "_blank",
+                rel: "noopener noreferrer nofollow sponsored",
+                "data-store-click": chainSlug,
+                "data-store-has-pdp": String(!!storeProductUrl),
+              }
+            : {})}
+          aria-label={linkAriaLabel}
+        >
+          Ir a la tienda →
+        </Link>
       </Button>
     </div>
   );

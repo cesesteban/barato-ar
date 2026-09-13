@@ -66,6 +66,7 @@ Todos code-complete y mergeados:
 | F015 | Zone picker + localStorage + geolocation | 🟢 |
 | F016 | 18 localidades GBA fine-grained | 🟢 |
 | F017 | Zone propagation across pages (7 sub-fixes) | 🟢 |
+| F019 | "Ir a la tienda" externo (VTEX + custom + F014 reuso + Google fallback + tracking) | 🟢 |
 
 **Score real global**:
 - 🟢 Completos: **6/17** (F001, F002, F008, F010, F013-F017 counted como 1)

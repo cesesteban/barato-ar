@@ -156,6 +156,8 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
                   rows={data.stores.inZone}
                   bestPrice={bestPrice}
                   zone={zone}
+                  productName={data.product.name}
+                  productBrand={data.product.brand}
                 />
                 <StoreSection
                   title={`Cerca de ${prettyZone(zone)}`}
@@ -163,6 +165,8 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
                   rows={data.stores.nearby}
                   bestPrice={bestPrice}
                   zone={zone}
+                  productName={data.product.name}
+                  productBrand={data.product.brand}
                 />
                 <StoreSection
                   title="Cadenas nacionales"
@@ -170,6 +174,8 @@ export default async function ProductPage({ params, searchParams }: PageProps) {
                   rows={data.stores.national}
                   bestPrice={bestPrice}
                   zone={zone}
+                  productName={data.product.name}
+                  productBrand={data.product.brand}
                 />
               </>
             )}
@@ -216,12 +222,16 @@ function StoreSection({
   rows,
   bestPrice,
   zone,
+  productName,
+  productBrand,
 }: {
   title: string;
   subtitle: string;
   rows: ComparisonStoreRow[];
   bestPrice: number | null;
   zone: string;
+  productName: string;
+  productBrand: string | null;
 }) {
   if (rows.length === 0) return null;
   const grouped = collapseSameChainPrice(rows);
@@ -244,6 +254,7 @@ function StoreSection({
               storeName={label}
               storeAddress={row.address ?? undefined}
               chainSlug={row.chainSlug}
+              chainName={row.chainName}
               price={row.price}
               previousPrice={row.previousPrice ?? undefined}
               deltaVsAvgPct={row.deltaVsAvgPct ?? undefined}
@@ -259,6 +270,12 @@ function StoreSection({
                     }
                   : undefined
               }
+              // F019: props para armar link externo a la tienda
+              productName={productName}
+              brand={productBrand}
+              storeProductUrl={row.storeProductUrl}
+              chainWebsiteUrl={row.chainWebsiteUrl}
+              // Fallback interno si resolveStoreLink no puede armar externo
               href={row.storeProductUrl ?? tiendaHref(row.chainSlug, zone)}
               best={bestPrice === row.price && i === 0}
             />

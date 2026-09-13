@@ -45,6 +45,12 @@ Elementos:
 - `<PriceHistoryCard>` con chart 90d
 - `<AlertCard>` form email
 
+**F019**: cada botón "Ir a la tienda →" abre en nueva pestaña con búsqueda
+pre-cargada en el sitio de la cadena (Carrefour/Coto/Día/Jumbo/Vea/Disco/
+La Anónima/Changomas/Farmacity + reuso de F014 para PY/Rappi/ML + Google
+site search para chains nuevas). Click tracking a Plausible via
+`<StoreClickTracker>` global.
+
 ### `/tienda/[slug]` — Landing de cadena
 
 **Archivo**: [src/app/tienda/[slug]/page.tsx](../src/app/tienda/[slug]/page.tsx)
