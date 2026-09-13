@@ -133,6 +133,12 @@ export async function fetchOffers(params: OffersParams, zoneCenter?: { lat: numb
             ${params.includeNearby}::boolean AND
             s.lat IS NOT NULL AND s.lng IS NOT NULL
             AND ${zoneCenter?.lat ?? null}::float IS NOT NULL
+            AND ${zoneCenter?.lng ?? null}::float IS NOT NULL
+            -- Bounding box aproximado (haversine sería más preciso pero requiere
+            -- extension o UDF). 1° lat ≈ 111km; 1° lng en Buenos Aires ≈ 92km.
+            -- Sobre-incluye ~20% que después JS filtra si es necesario.
+            AND ABS(s.lat - ${zoneCenter?.lat ?? 0}::float) < (${params.maxDistanceKm}::float / 111.0)
+            AND ABS(s.lng - ${zoneCenter?.lng ?? 0}::float) < (${params.maxDistanceKm}::float / 92.0)
           )
         )
         ${chainFilter}

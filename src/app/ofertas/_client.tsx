@@ -45,6 +45,7 @@ export function FiltersSidebar({ facets }: { facets: Facets }) {
   const currentSort = params.get("sort") ?? "discount";
   const minDiscount = Number(params.get("minDiscount") ?? "0");
   const includeNearby = params.get("includeNearby") !== "false";
+  const maxDistanceKm = Number(params.get("maxDistanceKm") ?? "15");
 
   function toggleChain(slug: string) {
     const next = new Set(currentChains);
@@ -141,6 +142,7 @@ export function FiltersSidebar({ facets }: { facets: Facets }) {
       <NeighborsToggle
         checked={includeNearby}
         onCheckedChange={(v) => setParam("includeNearby", v ? null : "false")}
+        radiusKm={maxDistanceKm}
       />
     </div>
   );

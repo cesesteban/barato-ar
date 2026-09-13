@@ -8,7 +8,9 @@ export const OffersParamsSchema = z.object({
     .optional()
     .transform((v) => (v ? v.split(",").map((s) => s.trim()).filter(Boolean) : [])),
   minDiscount: z.coerce.number().min(0).max(100).default(0),
-  maxDistanceKm: z.coerce.number().min(0).max(50).default(5),
+  // Default 15km: cubre municipio GBA + vecinos inmediatos. Antes 5km era
+  // demasiado chico y "nearby" no filtraba distance en SQL (bug).
+  maxDistanceKm: z.coerce.number().min(0).max(50).default(15),
   validity: z.enum(["today", "week", "month"]).default("week"),
   sort: z.enum(["discount", "new", "popular", "price_unit"]).default("discount"),
   cursor: z.string().optional(),
