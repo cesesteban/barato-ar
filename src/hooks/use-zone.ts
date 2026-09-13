@@ -14,10 +14,11 @@ const LS_KEY = "barato.zone";
  *   2. localStorage (elección previa del usuario en este navegador)
  *   3. DEFAULT_ZONE_SLUG (Palermo)
  *
- * Al cambiar la zona:
- *   - Escribe a localStorage
- *   - Actualiza el URL param con router.replace (mantiene el resto de query)
- *   - Los server components re-renderizan con searchParams nuevo
+ * IMPORTANTE: si el usuario tiene zona guardada en localStorage pero la URL
+ * no la tiene (ej. llegó a "/" directo), sincronizamos la URL en el mount
+ * con `router.replace()`. Esto es crítico porque los `href` de las cards
+ * se renderizan del lado servidor con `searchParams.zone` — sin sync,
+ * el usuario clickea una card y el link lleva zone=default.
  */
 export function useZone() {
   const searchParams = useSearchParams();
@@ -28,7 +29,6 @@ export function useZone() {
   const [zone, setZoneState] = useState<string>(urlZone ?? DEFAULT_ZONE_SLUG);
   const [hydrated, setHydrated] = useState(false);
 
-  // Al montar en el cliente, si no hay ?zone= usar localStorage.
   useEffect(() => {
     if (urlZone && getZoneBySlug(urlZone)) {
       setZoneState(urlZone);
@@ -39,12 +39,17 @@ export function useZone() {
       const stored = window.localStorage.getItem(LS_KEY);
       if (stored && getZoneBySlug(stored)) {
         setZoneState(stored);
+        // Sync URL para que server components rerenderen con la zona correcta.
+        // Sin esto, los hrefs de las cards se quedan con la zona default.
+        const params = new URLSearchParams(searchParams.toString());
+        params.set("zone", stored);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
       }
     } catch {
       // Storage bloqueado (private mode) — usamos default.
     }
     setHydrated(true);
-  }, [urlZone]);
+  }, [urlZone, pathname, router, searchParams]);
 
   const setZone = useCallback(
     (nextSlug: string) => {
