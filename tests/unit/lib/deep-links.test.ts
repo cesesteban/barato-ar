@@ -77,6 +77,31 @@ describe("deep-links (F014)", () => {
     );
   });
 
+  it("buildDeliveryQuery limpia códigos SEPA de packaging BOT-N-ml", () => {
+    expect(buildDeliveryQuery("Vino la Celia Elite Malbec 750 cc BOT-750-ml", "La Celia")).toBe(
+      "Vino la Celia Elite Malbec 750 ml",
+    );
+  });
+
+  it("buildDeliveryQuery limpia PCK-N-un y cc → ml", () => {
+    expect(
+      buildDeliveryQuery("Cerveza Heineken Rubia 330 cc Sixpack PCK-6-un", "Heineken"),
+    ).toBe("Cerveza Heineken Rubia 330 ml Sixpack");
+  });
+
+  it("buildDeliveryQuery trunca a 8 palabras", () => {
+    const long =
+      "Aceite Vegetal Natura Girasol Alto Oleico Sin TACC Botella 900 ml";
+    const result = buildDeliveryQuery(long, "Natura");
+    expect(result.split(" ").length).toBeLessThanOrEqual(8);
+  });
+
+  it("buildDeliveryQuery normaliza gramos: grs/gramos → g", () => {
+    expect(buildDeliveryQuery("Barrita Cereal Frutos Rojos x 30 grs", "Serenito")).toBe(
+      "Serenito Barrita Cereal Frutos Rojos x 30 g",
+    );
+  });
+
   it("readAffiliateIds: devuelve undefined cuando envs no están seteados", () => {
     const ids = readAffiliateIds();
     expect(ids.pedidosya).toBeUndefined();
