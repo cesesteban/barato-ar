@@ -11,7 +11,8 @@
 
 ## Técnicos
 
-- [ESTADO_ACTUAL.md](ESTADO_ACTUAL.md) — Snapshot del proyecto hoy
+- [ESTADO_ACTUAL.md](ESTADO_ACTUAL.md) — Snapshot del proyecto hoy (basado en audit)
+- [AUDIT.md](AUDIT.md) — Auditoría técnica detallada + bugs enumerados con IDs
 - [STACK.md](STACK.md) — Tecnologías + rationale
 - [ARQUITECTURA.md](ARQUITECTURA.md) — Flujo end-to-end (front + back)
 - [FLUJO_FRONTEND.md](FLUJO_FRONTEND.md) — App Router, SSR, hidratación, deep-links
