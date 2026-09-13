@@ -21,6 +21,7 @@ type LatestPriceRow = {
   address: string | null;
   chain_slug: string;
   chain_name: string;
+  chain_website_url: string | null;
   zone_id: string | null;
   store_lat: number | null;
   store_lng: number | null;
@@ -82,6 +83,7 @@ export async function getComparison(params: GetComparisonParams): Promise<Compar
       s.address,
       c.slug AS chain_slug,
       c.name AS chain_name,
+      c.website_url AS chain_website_url,
       s.zone_id,
       s.lat AS store_lat,
       s.lng AS store_lng,
@@ -147,6 +149,7 @@ export async function getComparison(params: GetComparisonParams): Promise<Compar
       validTo: r.valid_to,
       source: r.source,
       storeProductUrl: r.store_product_url,
+      chainWebsiteUrl: r.chain_website_url,
       distanceKm,
       proximity,
       deltaVsAvgPct: null,

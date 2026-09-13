@@ -174,6 +174,13 @@ Reevaluación granular de F001-F012 basada en audit:
 
 **Score real**: 4 🟢 completo · 7 🟡 parcial · 1 🔴 no probado = **33% completo**, no 100% como decía el doc anterior.
 
+## Bugs cerrados post-audit
+
+- **F019** (2026-09-13): "Ir a la tienda" ahora abre el sitio real de la cadena
+  con búsqueda pre-cargada (VTEX + Coto/La Anónima custom + Farmacity + reuso F014
+  para delivery + Google fallback). Antes caía a landing interna `/tienda/[slug]`.
+  Ver `specs/019-store-product-links/`.
+
 ## Bugs fixed durante esta sesión (F013-F017.8)
 
 Estos NO estaban documentados en la tabla de features, y son un ciclo entero de post-MVP:
