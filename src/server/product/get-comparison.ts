@@ -40,8 +40,15 @@ type LatestPriceRow = {
   price_per_unit_eff: string | null;
 };
 
+// Defaults ajustados para AMBA: barrios CABA son ~3km pero municipios GBA
+// ~10-15km. 10 captura el municipio propio + el vecino inmediato sin ser ruido.
+const DEFAULT_NEARBY_RADIUS_KM = 10;
+// Cap para el bucket "nacional": stores más lejos que esto son irrelevantes
+// para el usuario a menos que sean virtual (delivery online).
+const REGIONAL_MAX_KM = 30;
+
 export async function getComparison(params: GetComparisonParams): Promise<ComparisonView | null> {
-  const { slug, zoneSlug, includeNearby = true, nearbyRadiusKm = 3 } = params;
+  const { slug, zoneSlug, includeNearby = true, nearbyRadiusKm = DEFAULT_NEARBY_RADIUS_KM } = params;
 
   const product = await prisma.product.findFirst({
     where: { slug },
@@ -149,8 +156,20 @@ export async function getComparison(params: GetComparisonParams): Promise<Compar
 
     if (proximity === "in_zone") stores.inZone.push(row);
     else if (proximity === "nearby" && includeNearby) stores.nearby.push(row);
-    else if (proximity === "national") stores.national.push(row);
+    else if (proximity === "national") {
+      // Cap: stores físicos a más de 30km del centroide de la zona del usuario
+      // son ruido — se descartan salvo que sean virtuales (delivery online).
+      const withinCap =
+        r.is_virtual ||
+        distanceKm == null || // sin coords: mantener como referencia nacional
+        distanceKm <= REGIONAL_MAX_KM;
+      if (withinCap) stores.national.push(row);
+    }
   }
+
+  // Dedup en bucket "nacional": una fila por cadena (la más barata), para
+  // no mostrar la misma cadena 4 veces con precios distintos por sucursal.
+  stores.national = dedupByChainKeepingCheapest(stores.national);
 
   const [avgRow] = await prisma.$queryRaw<Array<{ avg30d: string | null; min_price: string | null; max_price: string | null }>>`
     SELECT
@@ -200,6 +219,17 @@ export async function getComparison(params: GetComparisonParams): Promise<Compar
     zoneSlug,
     variantOfPackaging,
   };
+}
+
+function dedupByChainKeepingCheapest(rows: ComparisonStoreRow[]): ComparisonStoreRow[] {
+  const byChain = new Map<string, ComparisonStoreRow>();
+  for (const r of rows) {
+    const existing = byChain.get(r.chainSlug);
+    if (!existing || r.price < existing.price) {
+      byChain.set(r.chainSlug, r);
+    }
+  }
+  return [...byChain.values()];
 }
 
 function normalizePromoType(t: string): ComparisonStoreRow["promoType"] {
