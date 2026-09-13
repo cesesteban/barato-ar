@@ -53,19 +53,34 @@ function withUtm(url: string, extraParams?: Record<string, string>): string {
   return u.toString();
 }
 
+/**
+ * URL de búsqueda por Google con filtro `site:` — siempre encuentra resultados
+ * cuando la plataforma tiene el producto indexado. Usamos esto como fallback
+ * porque las URLs nativas de PY y Rappi requieren cookie de dirección
+ * seleccionada, sin la cual redirigen al selector y pierden el query.
+ * Cuando exista deal con afiliados, cambiar a URL nativa (afiliado no
+ * traquea a través de Google).
+ */
+function googleSiteSearch(site: string, q: string): string {
+  return `https://www.google.com/search?q=${encodeURIComponent(`site:${site} ${q}`)}`;
+}
+
 export const DELIVERY_PARTNERS: DeliveryPartnerConfig[] = [
   {
     slug: "pedidosya",
     name: "PedidosYa",
     hostLabel: "pedidosya.com.ar",
     buildSearchUrl: (q: string, affiliateId?: string) => {
-      const extra = affiliateId
-        ? { partnerId: affiliateId, utm_source: affiliateId }
-        : undefined;
-      return withUtm(
-        `https://www.pedidosya.com.ar/mercado/search?query=${encodeURIComponent(q)}`,
-        extra,
-      );
+      // Con afiliado activado, URL nativa (necesaria para tracking del deal).
+      if (affiliateId) {
+        return withUtm(
+          `https://www.pedidosya.com.ar/mercados-y-almacenes?searchTerm=${encodeURIComponent(q)}`,
+          { partnerId: affiliateId, utm_source: affiliateId },
+        );
+      }
+      // Sin afiliado: Google site search — no requiere cookie de dirección y
+      // siempre lleva a la página real del producto en PY.
+      return googleSiteSearch("pedidosya.com.ar", q);
     },
   },
   {
@@ -73,11 +88,13 @@ export const DELIVERY_PARTNERS: DeliveryPartnerConfig[] = [
     name: "Rappi",
     hostLabel: "rappi.com.ar",
     buildSearchUrl: (q: string, affiliateId?: string) => {
-      const extra = affiliateId ? { ref: affiliateId, utm_source: affiliateId } : undefined;
-      return withUtm(
-        `https://www.rappi.com.ar/search?query=${encodeURIComponent(q)}`,
-        extra,
-      );
+      if (affiliateId) {
+        return withUtm(
+          `https://www.rappi.com.ar/search?query=${encodeURIComponent(q)}`,
+          { ref: affiliateId, utm_source: affiliateId },
+        );
+      }
+      return googleSiteSearch("rappi.com.ar", q);
     },
   },
   {
@@ -85,8 +102,9 @@ export const DELIVERY_PARTNERS: DeliveryPartnerConfig[] = [
     name: "MercadoLibre",
     hostLabel: "mercadolibre.com.ar",
     buildSearchUrl: (q: string, affiliateId?: string) => {
+      // ML sí acepta URL nativa sin cookies: /listado/... funciona siempre.
       const extra = affiliateId
-        ? { matt_word: affiliateId, matt_tool: "88833099" } // ML expects matt_word
+        ? { matt_word: affiliateId, matt_tool: "88833099" }
         : undefined;
       return withUtm(
         `https://listado.mercadolibre.com.ar/${encodeURIComponent(q.replace(/\s+/g, "-"))}`,

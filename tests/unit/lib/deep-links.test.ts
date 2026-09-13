@@ -12,28 +12,41 @@ describe("deep-links (F014)", () => {
     delete process.env["NEXT_PUBLIC_AFFILIATE_MERCADOLIBRE"];
   });
 
-  it("PedidosYa URL sin afiliado: solo UTM", () => {
+  it("PedidosYa sin afiliado: Google site search (URLs nativas requieren cookie de dirección)", () => {
     const py = DELIVERY_PARTNERS.find((p) => p.slug === "pedidosya");
     const url = py!.buildSearchUrl("Coca-Cola 2.25L", undefined);
     const parsed = new URL(url);
-    expect(parsed.hostname).toBe("www.pedidosya.com.ar");
-    expect(parsed.searchParams.get("query")).toBe("Coca-Cola 2.25L");
-    expect(parsed.searchParams.get("utm_source")).toBe("barato.ar");
-    expect(parsed.searchParams.get("partnerId")).toBeNull();
+    expect(parsed.hostname).toBe("www.google.com");
+    const q = parsed.searchParams.get("q") ?? "";
+    expect(q).toContain("site:pedidosya.com.ar");
+    expect(q).toContain("Coca-Cola 2.25L");
   });
 
-  it("PedidosYa URL con afiliado: agrega partnerId y sobreescribe utm_source", () => {
+  it("PedidosYa con afiliado: URL nativa con partnerId (para tracking)", () => {
     const py = DELIVERY_PARTNERS.find((p) => p.slug === "pedidosya");
     const url = py!.buildSearchUrl("Coca-Cola 2.25L", "PY-BARATO-42");
     const parsed = new URL(url);
+    expect(parsed.hostname).toBe("www.pedidosya.com.ar");
+    expect(parsed.searchParams.get("searchTerm")).toBe("Coca-Cola 2.25L");
     expect(parsed.searchParams.get("partnerId")).toBe("PY-BARATO-42");
     expect(parsed.searchParams.get("utm_source")).toBe("PY-BARATO-42");
   });
 
-  it("Rappi URL con afiliado: agrega ref", () => {
+  it("Rappi sin afiliado: Google site search", () => {
+    const rp = DELIVERY_PARTNERS.find((p) => p.slug === "rappi");
+    const url = rp!.buildSearchUrl("Aceite Natura", undefined);
+    const parsed = new URL(url);
+    expect(parsed.hostname).toBe("www.google.com");
+    const q = parsed.searchParams.get("q") ?? "";
+    expect(q).toContain("site:rappi.com.ar");
+    expect(q).toContain("Aceite Natura");
+  });
+
+  it("Rappi con afiliado: URL nativa con ref", () => {
     const rp = DELIVERY_PARTNERS.find((p) => p.slug === "rappi");
     const url = rp!.buildSearchUrl("Aceite", "RAP-XYZ-001");
     const parsed = new URL(url);
+    expect(parsed.hostname).toBe("www.rappi.com.ar");
     expect(parsed.searchParams.get("ref")).toBe("RAP-XYZ-001");
     expect(parsed.searchParams.get("utm_source")).toBe("RAP-XYZ-001");
   });
