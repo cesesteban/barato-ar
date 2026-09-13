@@ -137,9 +137,9 @@ description: "Tasks para F019 — Ir a la tienda lleva al producto real en la ca
 - [X] T040 Editar `docs/VISTAS.md`: en la sección de `/producto/[slug]`, agregar nota "Botones 'Ir a la tienda' abren en nueva pestaña con search en el sitio de cada cadena (F019)".
 - [X] T041 Editar `docs/FLUJO_FRONTEND.md`: en "Componentes clave", actualizar la entrada de `<PriceComparisonRow>` mencionando la nueva prop `chainWebsiteUrl` y que ahora resuelve href externo internamente.
 - [X] T042 Editar `docs/README.md` si aplica agregar `store-links.ts` como concepto en la lista de utils del backend/frontend.
-- [ ] T043 Commit con mensaje `feat(019-store-product-links): "Ir a la tienda" lleva al producto en el sitio de la cadena` firma Claude estándar. Incluye todos los cambios de código + docs.
-- [ ] T044 Merge a `main` con `git merge --no-ff feat/019-store-product-links -m "merge: feature 019 store product links"` + `git push origin main`.
-- [ ] T045 Post-deploy (Vercel auto): verificar en prod que un producto real muestra links externos correctos. Actualizar `docs/AUDIT.md` con timestamp de verificación.
+- [X] T043 Commit con firma Claude, cambios de código + docs
+- [X] T044 Merge no-ff + push a main (Vercel auto-deploy)
+- [X] T045 Prod verificado: 8/8 chains con URL externa correcta (curl grep confirmó Carrefour/Coto/Día/Jumbo/Disco/PY/Rappi/ML)
 
 ---
 
