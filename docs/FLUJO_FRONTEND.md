@@ -77,7 +77,7 @@ con la zona correcta (fix F017.3).
 | `<NavZoneSlot>` | Client | Wrapper del ZonePicker; pasa `ssrZoneLabel` para no flashear |
 | `<ZonePicker>` | Client | Modal Radix; usa `useZone` internamente |
 | `<DealCard>` | Server | Card de producto con precio + descuento; href pre-calculado |
-| `<PriceComparisonRow>` | Server | Fila de precio por store; F019 arma link externo a la tienda con `resolveStoreLink` (props: `productName`, `brand`, `chainWebsiteUrl`) |
+| `<PriceComparisonRow>` | Server | Fila de precio por store; F019 arma link externo con `resolveStoreLink`. F021: fallback a Google site search para todos los super sin afiliado (los sites VTEX/custom eran demasiado estrictos con queries SEPA). |
 | `<StoreClickTracker>` | Client | Listener global en PageShell; registra evento Plausible "Store Click" cuando el usuario clickea un `<a data-store-click>` externo |
 | `<SearchBar>` | Client | Autocomplete con debounce, fetch a /api/search/autocomplete |
 | `<AlertCard>` | Client | Form para crear alerta; POST a /api/alerts |

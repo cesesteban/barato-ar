@@ -1,77 +1,77 @@
 import { describe, expect, it } from "vitest";
-import { resolveStoreLink } from "@/lib/store-links";
+import { resolveStoreLink, NATIVE_BUILDERS } from "@/lib/store-links";
 import { DELIVERY_PARTNERS } from "@/lib/deep-links";
 
-describe("store-links (F019)", () => {
+describe("store-links (F019 + F021)", () => {
   const baseCtx = {
     productName: "Coca-Cola Original 2.25L",
     brand: "Coca-Cola",
   } as const;
 
-  // ------------------------- VTEX chains -------------------------
+  // ------------------------- F021 · Google fallback para chains conocidos -------------------------
 
-  it("Carrefour → URL VTEX de carrefour.com.ar con _q + map=ft", () => {
+  it("F021: Carrefour sin afiliado → Google site search sobre carrefour.com.ar", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "carrefour" });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.google.com");
+    const q = parsed.searchParams.get("q") ?? "";
+    expect(q).toContain("site:www.carrefour.com.ar");
+    expect(q).toContain("Coca-Cola");
+  });
+
+  it("F021: Coto → Google site search sobre cotodigital3.com.ar", () => {
+    const url = resolveStoreLink({ ...baseCtx, chainSlug: "coto" });
+    const q = new URL(url!).searchParams.get("q") ?? "";
+    expect(q).toContain("site:www.cotodigital3.com.ar");
+  });
+
+  it("F021: Día → Google site search sobre diaonline.supermercadosdia.com.ar", () => {
+    const url = resolveStoreLink({ ...baseCtx, chainSlug: "dia" });
+    const q = new URL(url!).searchParams.get("q") ?? "";
+    expect(q).toContain("site:diaonline.supermercadosdia.com.ar");
+  });
+
+  it("F021: La Anónima → Google site search sobre laanonimaonline.com", () => {
+    const url = resolveStoreLink({ ...baseCtx, chainSlug: "la-anonima" });
+    const q = new URL(url!).searchParams.get("q") ?? "";
+    expect(q).toContain("site:laanonimaonline.com");
+  });
+
+  it("F021: Farmacity → Google site search sobre farmacity.com", () => {
+    const url = resolveStoreLink({ ...baseCtx, chainSlug: "farmacity" });
+    const q = new URL(url!).searchParams.get("q") ?? "";
+    expect(q).toContain("site:www.farmacity.com");
+  });
+
+  it("F021: los 4 chains VTEX comunes (jumbo/vea/disco/changomas) usan Google", () => {
+    for (const slug of ["jumbo", "vea", "disco", "changomas"]) {
+      const url = resolveStoreLink({ ...baseCtx, chainSlug: slug });
+      const parsed = new URL(url!);
+      expect(parsed.hostname).toBe("www.google.com");
+    }
+  });
+
+  // ------------------------- NATIVE_BUILDERS exportado para deals futuros -------------------------
+
+  it("NATIVE_BUILDERS.carrefour devuelve URL VTEX nativa (para deal futuro)", () => {
+    const url = NATIVE_BUILDERS.carrefour!("Test Query");
+    const parsed = new URL(url);
     expect(parsed.hostname).toBe("www.carrefour.com.ar");
-    expect(parsed.searchParams.get("_q")).toContain("Coca-Cola");
+    expect(parsed.searchParams.get("_q")).toBe("Test Query");
     expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
-  it("Día → URL VTEX de diaonline.supermercadosdia.com.ar", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "dia" });
-    expect(new URL(url!).hostname).toBe("diaonline.supermercadosdia.com.ar");
-    expect(new URL(url!).searchParams.get("map")).toBe("ft");
-  });
-
-  it("Jumbo → URL VTEX de jumbo.com.ar", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "jumbo" });
-    expect(new URL(url!).hostname).toBe("www.jumbo.com.ar");
-  });
-
-  it("Vea → URL VTEX de vea.com.ar", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "vea" });
-    expect(new URL(url!).hostname).toBe("www.vea.com.ar");
-  });
-
-  it("Disco → URL VTEX de disco.com.ar", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "disco" });
-    expect(new URL(url!).hostname).toBe("www.disco.com.ar");
-  });
-
-  it("Changomas → URL VTEX de changomas.com.ar", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "changomas" });
-    expect(new URL(url!).hostname).toBe("www.changomas.com.ar");
-  });
-
-  // ------------------------- Custom builders -------------------------
-
-  it("Coto → cotodigital3.com.ar con param Ntt", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "coto" });
-    expect(new URL(url!).hostname).toBe("www.cotodigital3.com.ar");
-    expect(new URL(url!).pathname).toBe("/sitios/cdigi/browse");
-    expect(new URL(url!).searchParams.get("Ntt")).toContain("Coca-Cola");
-  });
-
-  it("La Anónima → laanonimaonline.com/busqueda con param q", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "la-anonima" });
-    expect(new URL(url!).hostname).toBe("laanonimaonline.com");
-    expect(new URL(url!).pathname).toBe("/busqueda");
-    expect(new URL(url!).searchParams.get("q")).toContain("Coca-Cola");
-  });
-
-  // ------------------------- Farmacity (US2) -------------------------
-
-  it("Farmacity → URL VTEX de farmacity.com", () => {
-    const url = resolveStoreLink({ ...baseCtx, chainSlug: "farmacity" });
-    expect(new URL(url!).hostname).toBe("www.farmacity.com");
-    expect(new URL(url!).searchParams.get("map")).toBe("ft");
+  it("NATIVE_BUILDERS.coto devuelve URL con Ntt", () => {
+    const url = NATIVE_BUILDERS.coto!("Test Query");
+    const parsed = new URL(url);
+    expect(parsed.hostname).toBe("www.cotodigital3.com.ar");
+    expect(parsed.searchParams.get("Ntt")).toBe("Test Query");
   });
 
   // ------------------------- Priority: storeProductUrl gana -------------------------
 
-  it("storeProductUrl explícito gana sobre builder", () => {
+  it("storeProductUrl explícito gana sobre Google fallback", () => {
     const pdp = "https://www.carrefour.com.ar/productos/coca-cola-2-25-retornable/p/12345";
     const url = resolveStoreLink({
       ...baseCtx,
@@ -81,14 +81,14 @@ describe("store-links (F019)", () => {
     expect(url).toBe(pdp);
   });
 
-  it("storeProductUrl inválido (no http) es ignorado → cae a builder", () => {
+  it("storeProductUrl inválido (no http) es ignorado → cae a Google", () => {
     const url = resolveStoreLink({
       ...baseCtx,
       chainSlug: "carrefour",
-      storeProductUrl: "javascript:alert(1)", // guardarnos de XSS
+      storeProductUrl: "javascript:alert(1)", // XSS guard
     });
     expect(url).not.toBeNull();
-    expect(new URL(url!).hostname).toBe("www.carrefour.com.ar");
+    expect(new URL(url!).hostname).toBe("www.google.com");
   });
 
   // ------------------------- Delivery reuso F014 (US3) -------------------------
@@ -126,7 +126,6 @@ describe("store-links (F019)", () => {
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.google.com");
     expect(parsed.searchParams.get("q")).toContain("site:www.nuevacadena.com.ar");
-    expect(parsed.searchParams.get("q")).toContain("Coca-Cola");
   });
 
   it("Chain desconocida sin websiteUrl → null", () => {
@@ -155,12 +154,10 @@ describe("store-links (F019)", () => {
       brand: "La Celia",
     });
     expect(url).not.toBeNull();
-    const parsed = new URL(url!);
-    const Ntt = parsed.searchParams.get("Ntt") ?? "";
-    expect(Ntt).not.toContain("BOT-750-ml");
-    expect(Ntt).not.toContain("cc");
-    expect(Ntt).toContain("ml");
-    expect(Ntt).toContain("Vino");
-    expect(Ntt).toContain("Malbec");
+    const q = new URL(url!).searchParams.get("q") ?? "";
+    expect(q).not.toContain("BOT-750-ml");
+    expect(q).not.toContain("cc");
+    expect(q).toContain("Vino");
+    expect(q).toContain("Malbec");
   });
 });

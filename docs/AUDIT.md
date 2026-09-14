@@ -176,6 +176,14 @@ Reevaluación granular de F001-F012 basada en audit:
 
 ## Bugs cerrados post-audit
 
+- **F021** (2026-09-14): "Ir a la tienda" → Google site search para TODOS los
+  super/farmacia (no solo delivery). Los sites VTEX/custom devolvían "producto
+  no encontrado" con nuestros queries SEPA porque sus catálogos requieren
+  títulos exactos. Google encuentra el producto en el mismo dominio siempre.
+  Trade-off: user pasa por Google. Cuando existan deals con afiliado, cambiar
+  a `NATIVE_BUILDERS` (exportado desde store-links.ts). Reemplaza el
+  comportamiento de F019 que apuntaba directo al site de la cadena.
+
 - **F020** (2026-09-13): calidad de nombres de productos. Pipeline extendido
   (cleanProductName + cleanBrand + brand-catalog nuevo) + repopulate script
   aplicado a los 47,116 products existentes en Neon. Métricas: " C "

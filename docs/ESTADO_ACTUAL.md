@@ -68,6 +68,7 @@ Todos code-complete y mergeados:
 | F017 | Zone propagation across pages (7 sub-fixes) | 🟢 |
 | F019 | "Ir a la tienda" externo (VTEX + custom + F014 reuso + Google fallback + tracking) | 🟢 |
 | F020 | Calidad de nombres (brand-catalog + text-cleanup extendido + repopulate 47k) | 🟢 |
+| F021 | "Ir a la tienda" → Google site search para todos los super sin afiliado | 🟢 |
 
 **Score real global**:
 - 🟢 Completos: **6/17** (F001, F002, F008, F010, F013-F017 counted como 1)
