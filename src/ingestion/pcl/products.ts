@@ -217,13 +217,17 @@ function isValidEan(candidate: string): boolean {
 
 async function upsertProduct(row: SepaProductoRow, ean: string): Promise<ProductCacheEntry> {
   const name = cleanProductName(row.productos_descripcion);
-  const brand = cleanBrand(row.productos_marca);
-  const presentation = formatPresentation(row);
-  const { size, unit } = extractSizeUnit(presentation || name);
-  const std = size != null && unit ? computeStandard(size, unit) : null;
+  // F020: pasa productName como hint para inferir brand cuando SEPA no la mandó.
+  const brand = cleanBrand(row.productos_marca, { productName: name });
+  // F020 size fix: PREFERIR fields estructurados de SEPA sobre parsear regex del name.
+  // El regex ambiguo puede confundir "1 L" con "1 ml" cuando hay ruido en el name.
+  const size = pickSize(row, name);
+  const unit = size.unit ?? null;
+  const sizeValue = size.value ?? null;
+  const std = sizeValue != null && unit ? computeStandard(sizeValue, unit) : null;
   const normalized = normalizeName(name);
   const packagingFlag = detectPackagingFlag(name);
-  const baseSlug = slugify(`${name} ${brand ?? ""} ${size ?? ""}${unit ?? ""}`);
+  const baseSlug = slugify(`${name} ${brand ?? ""} ${sizeValue ?? ""}${unit ?? ""}`);
   const slug = `${baseSlug}-${shortHash(ean)}`;
 
   const product = await prisma.product.upsert({
@@ -232,8 +236,8 @@ async function upsertProduct(row: SepaProductoRow, ean: string): Promise<Product
       name,
       normalizedName: normalized,
       brand,
-      size: size ?? null,
-      unit: unit ?? null,
+      size: sizeValue,
+      unit,
       standardSize: std ? new Decimal(std.standardSize) : null,
       standardUnit: std?.standardUnit ?? null,
       packagingFlag,
@@ -242,8 +246,8 @@ async function upsertProduct(row: SepaProductoRow, ean: string): Promise<Product
       name,
       normalizedName: normalized,
       brand,
-      size: size ?? null,
-      unit: unit ?? null,
+      size: sizeValue,
+      unit,
       standardSize: std ? new Decimal(std.standardSize) : null,
       standardUnit: std?.standardUnit ?? null,
       packagingFlag,
@@ -258,11 +262,24 @@ async function upsertProduct(row: SepaProductoRow, ean: string): Promise<Product
   };
 }
 
-function formatPresentation(row: SepaProductoRow): string {
-  const qty = row.productos_cantidad_presentacion;
-  const unit = row.productos_unidad_medida_presentacion;
-  if (qty != null && unit) return `${qty} ${unit}`;
-  return "";
+/**
+ * F020 · Resuelve size + unit priorizando fields estructurados de SEPA.
+ *   1. Si SEPA manda `productos_cantidad_presentacion` + `productos_unidad_medida_presentacion`
+ *      con valores válidos, usar esos (más confiables).
+ *   2. Si no, caer al parse del name via regex (menos preciso, ambiguo con noise).
+ */
+function pickSize(
+  row: SepaProductoRow,
+  cleanName: string,
+): { value: number | null; unit: string | null } {
+  const sepaQty = row.productos_cantidad_presentacion;
+  const sepaUnit = row.productos_unidad_medida_presentacion;
+  if (sepaQty != null && Number.isFinite(sepaQty) && sepaQty > 0 && sepaUnit) {
+    return { value: sepaQty, unit: sepaUnit.trim().toLowerCase() };
+  }
+  // Fallback: regex sobre el name limpio
+  const parsed = extractSizeUnit(cleanName);
+  return { value: parsed.size ?? null, unit: parsed.unit ?? null };
 }
 
 function shortHash(input: string): string {

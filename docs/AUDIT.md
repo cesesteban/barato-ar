@@ -64,14 +64,14 @@ stores (geo): 954      alerts: 0
 
 ### 🟡 Parciales (funciona pero con degradación visible)
 
-**B-03 · Nombres de productos truncados**
+**B-03 · Nombres de productos truncados** ✅ RESUELTO en F020 (2026-09-13)
 - Ejemplos reales de Neon: "Gaseo Cola" (Gaseosa Coca Cola), "Gomit Regaliz Frutil", "Alfa Simple Choco", "Queso Muzzare Rectan", "Trapo de Piso Rayado".
 - Root cause: SEPA source tiene nombres truncados en algunas cadenas (Coto notoriamente). `cleanProductName` no puede recuperar caracteres que no vinieron.
 - Impacto UX: usuario ve nombres feos, dificulta identificar producto sin ver marca + tamaño.
 - Fix posible: cross-reference con Open Food Facts por EAN para reemplazar nombre (post-integración R2). Sin OFF, no hay fix.
 - Prioridad: **P2**
 
-**B-04 · Marcas truncadas**
+**B-04 · Marcas truncadas** ✅ RESUELTO en F020 (2026-09-13)
 - Ejemplos: "Bulld" (Bulldog?), "Pesca" (Pescador?), "Smack", "Coca" (para Coca-Cola).
 - Root cause: mismo que B-03 — SEPA source truncated.
 - Impacto UX: display de marca en cards + brand chip en detalle.
@@ -175,6 +175,17 @@ Reevaluación granular de F001-F012 basada en audit:
 **Score real**: 4 🟢 completo · 7 🟡 parcial · 1 🔴 no probado = **33% completo**, no 100% como decía el doc anterior.
 
 ## Bugs cerrados post-audit
+
+- **F020** (2026-09-13): calidad de nombres de productos. Pipeline extendido
+  (cleanProductName + cleanBrand + brand-catalog nuevo) + repopulate script
+  aplicado a los 47,116 products existentes en Neon. Métricas: " C "
+  (con truncado) 828→0, " D " 114→0, Cerv/Choc/Gaseo/Alfa/Muzzare/Descrem/
+  Semidescre/Rectan todos a 0, códigos SEPA (BOT/PCK/LAT) eliminados del name,
+  32 marcas canonicalizadas (Guinn→Guinness, Coca→Coca-Cola, Stell→Stella
+  Artois, etc.), 21 brands extraídas del name para productos sin marca raw.
+  Búsqueda ahora encuentra "focaccia", "coca cola", "cerveza retornable"
+  (0 hits antes). B-03 y B-04 del AUDIT resueltos.
+  Ver `specs/020-product-naming-quality/`.
 
 - **F019** (2026-09-13): "Ir a la tienda" ahora abre el sitio real de la cadena
   con búsqueda pre-cargada (VTEX + Coto/La Anónima custom + Farmacity + reuso F014

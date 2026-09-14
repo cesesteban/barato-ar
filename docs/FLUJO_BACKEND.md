@@ -215,7 +215,8 @@ Votos comunitarios (soft-moderación)
 - `units.ts` — normalización tamaños (250 g ↔ 0.25 kg)
 - `zones-catalog.ts` — 33 zonas + geo matching
 - `deep-links.ts` — URL builders PY/Rappi/ML con UTM + afiliado
-- `text-cleanup.ts` — expansión abreviaturas SEPA
+- `text-cleanup.ts` — expansión abreviaturas SEPA + strip códigos + strip chain names + dedup words + integración con brand-catalog (F020)
+- `brand-catalog.ts` — dictionary de ~90 marcas AR canónicas con aliases; `resolveBrand` + `extractBrandFromName` (F020)
 - `urls.ts` — productHref/tiendaHref/ofertasHref (propaga zone)
 
 ## Failover
