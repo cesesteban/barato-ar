@@ -185,16 +185,21 @@ export function resolveZoneId(input: {
     provincia === "caba" ||
     provincia === "capital federal" ||
     provincia === "ciudad autonoma de buenos aires" ||
-    provincia === "ciudad autónoma de buenos aires";
+    provincia === "ciudad autónoma de buenos aires" ||
+    provincia === "ar-c";
+
+  const truthy = (s: string) => s && s.length > 0;
 
   if (isCaba) {
-    return (localidad && LOCALIDAD_TO_ZONE[localidad]) ?? (ciudad && LOCALIDAD_TO_ZONE[ciudad]) ?? "caba";
+    const byLocalidad = truthy(localidad) ? LOCALIDAD_TO_ZONE[localidad] : undefined;
+    const byCiudad = truthy(ciudad) ? LOCALIDAD_TO_ZONE[ciudad] : undefined;
+    return byLocalidad ?? byCiudad ?? "caba";
   }
   if (provincia === "buenos aires" || provincia === "pba" || provincia === "ar-b") {
     // 1. Municipio exacto (fine-grained)
     const exact =
-      (localidad && GBA_MUNICIPIO_TO_ZONE[localidad]) ??
-      (ciudad && GBA_MUNICIPIO_TO_ZONE[ciudad]);
+      (truthy(localidad) ? GBA_MUNICIPIO_TO_ZONE[localidad] : undefined) ??
+      (truthy(ciudad) ? GBA_MUNICIPIO_TO_ZONE[ciudad] : undefined);
     if (exact) return exact;
 
     // 2. Keyword fallback (parent region)

@@ -53,8 +53,12 @@ export type ExtractedSnapshot = {
 };
 
 function resolveDailyUrl(): { url: string; slug: string } {
-  const override = process.env["SEPA_DAILY_URL"];
-  if (override) return { url: override, slug: "custom" };
+  const dayOverride = process.env["SEPA_DAY_OVERRIDE"];
+  if (dayOverride) {
+    const url = SEPA_DAILY_URLS[dayOverride];
+    if (!url) throw new Error(`SEPA_DAY_OVERRIDE inválido: "${dayOverride}". Use: lunes|martes|miercoles|jueves|viernes|sabado|domingo`);
+    return { url, slug: dayOverride };
+  }
   const now = new Date(Date.now());
   // ART = UTC-3; usamos slugs sin tildes.
   const argTime = new Date(now.getTime() - 3 * 60 * 60 * 1000);

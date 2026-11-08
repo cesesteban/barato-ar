@@ -65,4 +65,14 @@ describe("PCL zones · resolveZoneId (F004+F016)", () => {
       "pba-moron",
     );
   });
+
+  it("CABA via SEPA code AR-C → caba-palermo", () => {
+    expect(resolveZoneId({ provincia: "AR-C", ciudad: "Palermo", localidad: "Palermo" })).toBe(
+      "caba-palermo",
+    );
+  });
+
+  it("CABA via SEPA code AR-C without localidad → caba", () => {
+    expect(resolveZoneId({ provincia: "AR-C", ciudad: "Capital Federal", localidad: "" })).toBe("caba");
+  });
 });

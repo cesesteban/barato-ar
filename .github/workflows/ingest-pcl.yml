@@ -6,8 +6,17 @@ on:
   workflow_dispatch:
     inputs:
       day_override:
-        description: "Override día (opcional: lunes|martes|...|domingo)"
+        description: "Override día (opcional: lunes|martes|miercoles|jueves|viernes|sabado|domingo) — sin tildes"
         required: false
+        type: choice
+        options:
+          - lunes
+          - martes
+          - miercoles
+          - jueves
+          - viernes
+          - sabado
+          - domingo
 
 concurrency:
   group: ingest-pcl
@@ -16,7 +25,7 @@ concurrency:
 jobs:
   pcl:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL_UNPOOLED }}
       DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
@@ -25,7 +34,8 @@ jobs:
       REVALIDATE_SECRET: ${{ secrets.REVALIDATE_SECRET }}
       NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN_INGEST }}
-      SEPA_DAILY_URL: ${{ github.event.inputs.day_override && format('https://datos.produccion.gob.ar/dataset/6f47ec76-d1ce-4e34-a7e1-621fe9b1d0b5/resource/{0}/download/sepa_{1}.zip', 'placeholder', github.event.inputs.day_override) || '' }}
+      # day_override se pasa como env var para que el código use su mapa interno SEPA_DAILY_URLS
+      SEPA_DAY_OVERRIDE: ${{ github.event.inputs.day_override }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
