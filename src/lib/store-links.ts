@@ -58,12 +58,14 @@ function cleanForVTEX(query: string): string {
  * URL de search de una tienda VTEX (Carrefour, Día, Jumbo, Vea, Disco,
  * Changomas, Farmacity comparten esta convención).
  *
- * Patrón óptimo: homepage con `_q` param que pre-lena el buscador
- * + `map=ft` para forzar resultados de full-text search (auto-ejecuta).
- *   https://{host}/?_q={query}&map=ft
+ * Usamos /buscar?q= porque SÍ muestra resultados de búsqueda directa.
+ * El patrón /?_q= solo pre-lena el input del buscador en el homepage pero
+ * no auto-ejecuta la búsqueda (VTEX es una SPA React: necesita interacción
+ * del usuario para disparar el submit).
  *
- * El `_q` pre-lena la caja de búsqueda visible al usuario.
- * El `map=ft` dispara la búsqueda automáticamente (evita el bug "borrar 1 letra para que busque").
+ * Por eso no podemos tener ambos: pre-llene el input Y muestre resultados.
+ * Elegimos mostrar resultados (/buscar) que es lo que el buscar quiere:
+ * llegar y ver productos, no un input pre-lleno vacío.
  */
 function vtexSearch(host: string, q: string, brand?: string | null): string {
   const cleanedForSlug = cleanForVTEX(q);
@@ -75,8 +77,7 @@ function vtexSearch(host: string, q: string, brand?: string | null): string {
   }
 
   const encoded = encodeURIComponent(queryForSearch);
-  // Homepage con _q (pre-fill) + map=ft (auto-search)
-  return `https://${host}/?_q=${encoded}&map=ft`;
+  return `https://${host}/buscar?q=${encoded}`;
 }
 
 /**
@@ -97,7 +98,7 @@ function googleSiteSearch(hostname: string, q: string): string {
  * agregar su entry acá. Si comparte convención VTEX, usar `vtexSearch`.
  * Si tiene URL scheme propia, agregar builder custom.
  *
- * Para VTEX: pasamos (query, brand) para que el _q param incluya la marca.
+ * Para VTEX: pasamos (query, brand) para que el q param incluya la marca.
  * Para custom: solo usan query.
  */
 const STORE_LINK_BUILDERS: Record<string, ChainBuilder> = {
@@ -140,7 +141,7 @@ export function resolveStoreLink(ctx: StoreLinkContext): string | null {
   }
 
   // Para VTEX no prepender la marca en el query principal (sus títulos no la incluyen al inicio)
-  // Pero SÍ pasamos la marca al builder para que la incluya en el _q param de VTEX
+  // Pero SÍ pasamos la marca al builder para que la incluya en el q param de VTEX
   const brandForQuery = VTEX_CHAINS.has(ctx.chainSlug) ? null : ctx.brand ?? null;
   const query = buildDeliveryQuery(ctx.productName, brandForQuery);
 

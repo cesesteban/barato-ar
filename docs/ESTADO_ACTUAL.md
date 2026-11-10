@@ -171,7 +171,7 @@ Budget de constitución: LCP < 2.5s p75 mobile 4G. **La home rompe el budget**.
 
 ## Tests
 
-**Total**: ~200 unit tests pasando (`pnpm test`).
+**Total**: 246 unit tests pasando (`pnpm test`) + 12 E2E tests de navegación saliente (`tests/e2e/product-outbound-links.spec.ts`) vs producción.
 
 **Cobertura**:
 - ✅ Ingesta PCL: schemas, zones, geo, EAN dedup
@@ -179,7 +179,7 @@ Budget de constitución: LCP < 2.5s p75 mobile 4G. **La home rompe el budget**.
 - ✅ Deep links: URLs con/sin afiliado, cleanup queries SEPA
 - ✅ Zone catalog: 33 zonas, nearest matching
 - ✅ Utils: tokens HMAC, format-price, promo parsing
-- ⚫ E2E: no configurado (fuera de MVP)
+- ✅ E2E: Playwright configurado — `tests/e2e/product-outbound-links.spec.ts` (12 tests vs `barato-ar.vercel.app`, cobertura: "Ir a la tienda" por chain + delivery PY/Rappi/ML + click abre pestaña + rel nofollow/noopener)
 - ⚫ Visual regression: no configurado
 
 ## Deuda técnica reconocida

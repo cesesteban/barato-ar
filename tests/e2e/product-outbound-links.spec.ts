@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * E2E tests para validar navegación saliente ("Ir a la tienda" y deep links
@@ -18,7 +18,7 @@ const PRODUCT_URL = `https://barato-ar.vercel.app/producto/${PRODUCT_SLUG}?zone=
 
 test.use({ navigationTimeout: 30000 });
 
-const pageHasLoaded = async (page: Parameters<typeof test>[0]["page"]) => {
+const pageHasLoaded = async (page: Page) => {
   await page.goto(PRODUCT_URL, {
     waitUntil: "domcontentloaded",
     timeout: 30000,
@@ -38,7 +38,7 @@ test.describe("Product detail page — outbound navigation (Ir a la tienda + del
     await expect(anchors.first()).toBeVisible({ timeout: 10000 });
   });
 
-  test("VTEX chains (Carrefour, Día, Jumbo, Vea, Disco, Changomas, Farmacity) usan /? con _q + map=ft", async ({ page }) => {
+  test("VTEX chains (Carrefour, Día, Jumbo, Vea, Disco, Changomas, Farmacity) usan /buscar?q= (resultados directos)", async ({ page }) => {
     const vtexChains = ["carrefour", "dia", "jumbo", "vea", "disco", "changomas", "farmacity"];
 
     const expectedHosts: Record<string, string> = {
@@ -62,16 +62,15 @@ test.describe("Product detail page — outbound navigation (Ir a la tienda + del
       const url = new URL(href!);
       expect(url.hostname).toBe(expectedHosts[chainSlug]);
 
-      // Path debe ser / (homepage de la tienda con pre-fill)
-      expect(url.pathname).toBe("/");
+      // Path debe ser /buscar (página de resultados, no homepage pre-llena)
+      // VTEX no puede auto-ejecutar búsqueda desde enlace externo (es SPA React),
+      // así que elegimos mostrar resultados en lugar de pre-llenar input vacío.
+      expect(url.pathname).toBe("/buscar");
 
-      // _q param debe contener el nombre del producto (pre-fill del buscador)
-      const q = url.searchParams.get("_q");
+      // q param debe contener el nombre del producto
+      const q = url.searchParams.get("q");
       expect(q).toBeTruthy();
       expect(q!.length).toBeGreaterThan(0);
-
-      // map=ft para auto-disparar búsqueda
-      expect(url.searchParams.get("map")).toBe("ft");
 
       // target="_blank" para abrir en nueva pestaña
       expect(await anchor.getAttribute("target")).toBe("_blank");
