@@ -102,6 +102,17 @@ const STORE_LINK_BUILDERS: Record<string, ChainBuilder> = {
     `https://laanonimaonline.com/busqueda?q=${encodeURIComponent(q)}`,
 };
 
+/** Chains que usan VTEX — para ellos NO prepender la marca (no está en sus títulos) */
+const VTEX_CHAINS = new Set([
+  "carrefour",
+  "dia",
+  "jumbo",
+  "vea",
+  "disco",
+  "changomas",
+  "farmacity",
+]);
+
 /**
  * Resuelve el URL final al que debe llevar el botón "Ir a la tienda".
  * Retorna null solo si no hay chainWebsiteUrl ni builder — el caller debe
@@ -113,7 +124,9 @@ export function resolveStoreLink(ctx: StoreLinkContext): string | null {
     return ctx.storeProductUrl;
   }
 
-  const query = buildDeliveryQuery(ctx.productName, ctx.brand ?? null);
+  // Para VTEX no prepender la marca: sus títulos de producto no la incluyen al inicio
+  const brandForQuery = VTEX_CHAINS.has(ctx.chainSlug) ? null : ctx.brand ?? null;
+  const query = buildDeliveryQuery(ctx.productName, brandForQuery);
 
   // Prioridad 2: builder específico por chain
   const chainBuilder = STORE_LINK_BUILDERS[ctx.chainSlug];
