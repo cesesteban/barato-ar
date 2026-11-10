@@ -29,7 +29,7 @@ export type StoreLinkContext = {
   chainWebsiteUrl?: string | null | undefined;
 };
 
-type ChainBuilder = (query: string) => string;
+type ChainBuilder = (query: string, brand?: string | null) => string;
 
 /**
  * Limpia prefijos y sufijos comunes en nombres de productos SEPA que
@@ -59,11 +59,21 @@ function cleanForVTEX(query: string): string {
  * Changomas, Farmacity comparten esta convención):
  *   https://{host}/{slug}?_q={query}&map=ft
  * El `slug` en el path ayuda al SEO de la tienda pero no es requerido.
+ * El `_q` param es el que REALMENTE hace la búsqueda - lo hacemos más
+ * descriptivo incluyendo la marca cuando está disponible.
  */
-function vtexSearch(host: string, q: string): string {
-  const cleaned = cleanForVTEX(q);
-  const slug = encodeURIComponent(cleaned.replace(/\s+/g, "-").toLowerCase());
-  const encoded = encodeURIComponent(cleaned);
+function vtexSearch(host: string, q: string, brand?: string | null): string {
+  const cleanedForSlug = cleanForVTEX(q);
+  const slug = encodeURIComponent(cleanedForSlug.replace(/\s+/g, "-").toLowerCase());
+
+  // Para el _q param, incluir la marca si está disponible para hacer
+  // la búsqueda más específica (los títulos VTEX suelen incluir marca
+  // en medio o al final: "Orégano Molido McCormick 51g")
+  let queryForSearch = cleanedForSlug;
+  if (brand && !cleanedForSlug.toLowerCase().includes(brand.toLowerCase())) {
+    queryForSearch = `${cleanedForSlug} ${brand}`;
+  }
+  const encoded = encodeURIComponent(queryForSearch);
   return `https://${host}/${slug}?_q=${encoded}&map=ft`;
 }
 
@@ -84,18 +94,21 @@ function googleSiteSearch(hostname: string, q: string): string {
  * Cuando se agrega una cadena nueva al seed (`prisma/seed/chains.ts`),
  * agregar su entry acá. Si comparte convención VTEX, usar `vtexSearch`.
  * Si tiene URL scheme propia, agregar builder custom.
+ *
+ * Para VTEX: pasamos (query, brand) para que el _q param incluya la marca.
+ * Para custom: solo usan query.
  */
 const STORE_LINK_BUILDERS: Record<string, ChainBuilder> = {
-  // VTEX supermercados
-  carrefour: (q) => vtexSearch("www.carrefour.com.ar", q),
-  dia: (q) => vtexSearch("diaonline.supermercadosdia.com.ar", q),
-  jumbo: (q) => vtexSearch("www.jumbo.com.ar", q),
-  vea: (q) => vtexSearch("www.vea.com.ar", q),
-  disco: (q) => vtexSearch("www.disco.com.ar", q),
-  changomas: (q) => vtexSearch("www.changomas.com.ar", q),
+  // VTEX supermercados - pasamos brand para enriquecer el _q param
+  carrefour: (q, brand) => vtexSearch("www.carrefour.com.ar", q, brand),
+  dia: (q, brand) => vtexSearch("diaonline.supermercadosdia.com.ar", q, brand),
+  jumbo: (q, brand) => vtexSearch("www.jumbo.com.ar", q, brand),
+  vea: (q, brand) => vtexSearch("www.vea.com.ar", q, brand),
+  disco: (q, brand) => vtexSearch("www.disco.com.ar", q, brand),
+  changomas: (q, brand) => vtexSearch("www.changomas.com.ar", q, brand),
   // VTEX farmacia
-  farmacity: (q) => vtexSearch("www.farmacity.com", q),
-  // Custom
+  farmacity: (q, brand) => vtexSearch("www.farmacity.com", q, brand),
+  // Custom - solo usan query
   coto: (q) =>
     `https://www.cotodigital3.com.ar/sitios/cdigi/browse?Ntt=${encodeURIComponent(q)}`,
   "la-anonima": (q) =>
@@ -124,14 +137,17 @@ export function resolveStoreLink(ctx: StoreLinkContext): string | null {
     return ctx.storeProductUrl;
   }
 
-  // Para VTEX no prepender la marca: sus títulos de producto no la incluyen al inicio
+  // Para VTEX no prepender la marca en el query principal (sus títulos no la incluyen al inicio)
+  // Pero SÍ pasamos la marca al builder para que la incluya en el _q param de VTEX
   const brandForQuery = VTEX_CHAINS.has(ctx.chainSlug) ? null : ctx.brand ?? null;
   const query = buildDeliveryQuery(ctx.productName, brandForQuery);
 
   // Prioridad 2: builder específico por chain
   const chainBuilder = STORE_LINK_BUILDERS[ctx.chainSlug];
   if (chainBuilder) {
-    return chainBuilder(query);
+    // Para VTEX, pasamos la marca original para enriquecer _q
+    const brandForVTEX = VTEX_CHAINS.has(ctx.chainSlug) ? ctx.brand ?? null : undefined;
+    return chainBuilder(query, brandForVTEX);
   }
 
   // Prioridad 3: delivery partner (F014) — misma URL que <DeliveryLinks>
