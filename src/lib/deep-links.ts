@@ -118,17 +118,23 @@ export const DELIVERY_PARTNERS: DeliveryPartnerConfig[] = [
  * Reduce el nombre del producto a un query eficiente para las plataformas.
  *
  * Los nombres de SEPA vienen con ruido específico de su dataset (códigos
- * de packaging, unidades poco comunes, presentaciones abreviadas) que
- * Google y las apps de delivery no indexan — hay que sacarlo para que
- * la búsqueda encuentre resultados.
+ * de packaging, unidades poco comunes, presentaciones abreviadas, prefijos
+ * basura como "S/d") que Google y las apps de delivery no indexan —
+ * hay que sacarlo para que la búsqueda encuentre resultados.
  *
  * Ejemplos reales:
  *   "Vino la Celia Elite Malbec 750 cc BOT-750-ml" → "Vino la Celia Elite Malbec 750 ml"
  *   "Cerveza Heineken Rubia 330 cc Sixpack PCK-6-un" → "Cerveza Heineken Rubia 330 ml Sixpack"
  *   "Gaseosa Coca Cola Original 237 cc BOT-237-cc" → "Gaseosa Coca Cola Original 237 ml"
+ *   "S/d Grisines Panader a Semillas x 100 g" → "Grisines Panader a Semillas"
+ *   "Sin descripción Leche Entera 1 L" → "Leche Entera"
  */
 export function buildDeliveryQuery(productName: string, brand: string | null): string {
   let cleaned = productName
+    // Prefijos basura típicos de SEPA — al inicio O precedidos de espacio
+    .replace(/(^|\s)s\/?d\.?\s+/gi, "$1")
+    .replace(/(^|\s)sin\s+descripci[oó]n\s+/gi, "$1")
+    .replace(/(^|\s)sin\s+desc\.?\s+/gi, "$1")
     // Códigos SEPA de packaging: BOT-750-ml, PCK-6-un, PAQ-500-g, etc.
     .replace(/\b[A-Z]{2,4}-\d+(?:[.,]\d+)?-[A-Za-z]+\b/g, "")
     // EANs o SKUs numéricos largos embebidos

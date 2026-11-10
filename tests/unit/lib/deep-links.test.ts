@@ -102,6 +102,40 @@ describe("deep-links (F014)", () => {
     );
   });
 
+  // Prefix cleaning (SEPA "S/d", "Sin descripción") — benefits ALL consumers:
+  // Coto, La Anónima, VTEX, delivery partners, Google fallback
+
+  it("buildDeliveryQuery limpia prefijo 'S/d ' (bug reportado)", () => {
+    expect(buildDeliveryQuery("S/d Grisines Panader a Semillas x 100 g", "Fargo")).toBe(
+      "Fargo Grisines Panader a Semillas x 100 g",
+    );
+    expect(buildDeliveryQuery("S/d Grisines Panader a Semillas x 100 g", null)).toBe(
+      "Grisines Panader a Semillas x 100 g",
+    );
+  });
+
+  it("buildDeliveryQuery limpia prefijo 'S/d.' (con punto)", () => {
+    expect(buildDeliveryQuery("S/d. Leche Entera 1 L", "La Serenisima")).toBe(
+      "La Serenisima Leche Entera 1 L",
+    );
+  });
+
+  it("buildDeliveryQuery limpia prefijo 'Sin descripción '", () => {
+    expect(buildDeliveryQuery("Sin descripción Yogur Natural 170 g", "Danone")).toBe(
+      "Danone Yogur Natural 170 g",
+    );
+    expect(buildDeliveryQuery("Sin desc. Aceite 900 ml", "Natura")).toBe(
+      "Natura Aceite 900 ml",
+    );
+  });
+
+  it("buildDeliveryQuery limpia prefijo aunque venga después de la marca (brand prepended)", () => {
+    // Cuando buildDeliveryQuery prepende la marca, el prefijo queda en medio
+    expect(buildDeliveryQuery("S/d Pan Lactal 460 g", "Fargo")).toBe(
+      "Fargo Pan Lactal 460 g",
+    );
+  });
+
   it("readAffiliateIds: devuelve undefined cuando envs no están seteados", () => {
     const ids = readAffiliateIds();
     expect(ids.pedidosya).toBeUndefined();
