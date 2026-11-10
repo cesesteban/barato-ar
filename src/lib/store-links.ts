@@ -59,22 +59,24 @@ function cleanForVTEX(query: string): string {
  * Changomas, Farmacity comparten esta convención):
  *   https://{host}/{slug}?_q={query}&map=ft
  * El `slug` en el path ayuda al SEO de la tienda pero no es requerido.
- * El `_q` param es el que REALMENTE hace la búsqueda - lo hacemos más
- * descriptivo incluyendo la marca cuando está disponible.
+ * El `_q` param pre-lena el buscador PERO no auto-dispara la búsqueda
+ * (comportamiento estándar VTEX: necesita input del usuario).
+ *
+ * Para forzar resultados reales, usamos la página de resultados `/buscar`
+ * con param `q` que SÍ muestra resultados directo.
  */
 function vtexSearch(host: string, q: string, brand?: string | null): string {
   const cleanedForSlug = cleanForVTEX(q);
-  const slug = encodeURIComponent(cleanedForSlug.replace(/\s+/g, "-").toLowerCase());
 
-  // Para el _q param, incluir la marca si está disponible para hacer
-  // la búsqueda más específica (los títulos VTEX suelen incluir marca
-  // en medio o al final: "Orégano Molido McCormick 51g")
+  // Para el query param, incluir la marca si está disponible
   let queryForSearch = cleanedForSlug;
   if (brand && !cleanedForSlug.toLowerCase().includes(brand.toLowerCase())) {
     queryForSearch = `${cleanedForSlug} ${brand}`;
   }
+
+  // USAR /buscar?q= que muestra resultados reales (no solo pre-fill)
   const encoded = encodeURIComponent(queryForSearch);
-  return `https://${host}/${slug}?_q=${encoded}&map=ft`;
+  return `https://${host}/buscar?q=${encoded}`;
 }
 
 /**

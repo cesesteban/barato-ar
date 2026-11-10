@@ -9,40 +9,52 @@ describe("store-links (F019)", () => {
   } as const;
 
   // ------------------------- VTEX chains -------------------------
+  // Usan /buscar?q= para mostrar resultados reales (no solo pre-fill _q)
 
-  it("Carrefour → URL VTEX de carrefour.com.ar con _q + map=ft", () => {
+  it("Carrefour → URL /buscar?q= con marca enriquecida", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "carrefour" });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.carrefour.com.ar");
-    expect(parsed.searchParams.get("_q")).toContain("Coca-Cola");
-    expect(parsed.searchParams.get("map")).toBe("ft");
+    expect(parsed.pathname).toBe("/buscar");
+    expect(parsed.searchParams.get("q")).toContain("Coca-Cola");
+    expect(parsed.searchParams.get("q")).toContain("Original");
   });
 
-  it("Día → URL VTEX de diaonline.supermercadosdia.com.ar", () => {
+  it("Día → URL /buscar?q=", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "dia" });
-    expect(new URL(url!).hostname).toBe("diaonline.supermercadosdia.com.ar");
-    expect(new URL(url!).searchParams.get("map")).toBe("ft");
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("diaonline.supermercadosdia.com.ar");
+    expect(parsed.pathname).toBe("/buscar");
+    expect(parsed.searchParams.get("q")).toContain("Coca-Cola");
   });
 
-  it("Jumbo → URL VTEX de jumbo.com.ar", () => {
+  it("Jumbo → URL /buscar?q=", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "jumbo" });
-    expect(new URL(url!).hostname).toBe("www.jumbo.com.ar");
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.jumbo.com.ar");
+    expect(parsed.pathname).toBe("/buscar");
   });
 
-  it("Vea → URL VTEX de vea.com.ar", () => {
+  it("Vea → URL /buscar?q=", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "vea" });
-    expect(new URL(url!).hostname).toBe("www.vea.com.ar");
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.vea.com.ar");
+    expect(parsed.pathname).toBe("/buscar");
   });
 
-  it("Disco → URL VTEX de disco.com.ar", () => {
+  it("Disco → URL /buscar?q=", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "disco" });
-    expect(new URL(url!).hostname).toBe("www.disco.com.ar");
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.disco.com.ar");
+    expect(parsed.pathname).toBe("/buscar");
   });
 
-  it("Changomas → URL VTEX de changomas.com.ar", () => {
+  it("Changomas → URL /buscar?q=", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "changomas" });
-    expect(new URL(url!).hostname).toBe("www.changomas.com.ar");
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.changomas.com.ar");
+    expect(parsed.pathname).toBe("/buscar");
   });
 
   // ------------------------- Custom builders -------------------------
@@ -63,10 +75,12 @@ describe("store-links (F019)", () => {
 
   // ------------------------- Farmacity (US2) -------------------------
 
-  it("Farmacity → URL VTEX de farmacity.com", () => {
+  it("Farmacity → URL /buscar?q=", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "farmacity" });
-    expect(new URL(url!).hostname).toBe("www.farmacity.com");
-    expect(new URL(url!).searchParams.get("map")).toBe("ft");
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.farmacity.com");
+    expect(parsed.pathname).toBe("/buscar");
+    expect(parsed.searchParams.get("q")).toContain("Coca-Cola");
   });
 
   // ------------------------- Priority: storeProductUrl gana -------------------------
@@ -164,9 +178,9 @@ describe("store-links (F019)", () => {
     expect(Ntt).toContain("Malbec");
   });
 
-  // ------------------------- VTEX slug cleaning (US5) -------------------------
+  // ------------------------- VTEX query cleaning (US5) -------------------------
 
-  it("Carrefour: limpia prefijo 'S/d ' del slug y del _q (bug reported)", () => {
+  it("Carrefour: limpia prefijo 'S/d ' del query (bug reported)", () => {
     const url = resolveStoreLink({
       chainSlug: "carrefour",
       productName: "S/d Grisines Panader a Semillas x 100 g",
@@ -175,17 +189,15 @@ describe("store-links (F019)", () => {
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.carrefour.com.ar");
-    // El slug del path NO debe tener "s%2Fd-"
-    expect(parsed.pathname).not.toContain("s%2Fd");
-    expect(parsed.pathname).toContain("grisines-panader-a-semillas");
-    // El _q tampoco debe tener "S/d"
-    const q = parsed.searchParams.get("_q") ?? "";
+    expect(parsed.pathname).toBe("/buscar");
+    // El query q NO debe tener "S/d"
+    const q = parsed.searchParams.get("q") ?? "";
     expect(q).not.toContain("S/d");
     expect(q).toContain("Grisines");
     expect(q).toContain("Semillas");
   });
 
-  it("Carrefour: limpia prefijo 'S/d.' (con punto) del slug", () => {
+  it("Carrefour: limpia prefijo 'S/d.' (con punto) del query", () => {
     const url = resolveStoreLink({
       chainSlug: "carrefour",
       productName: "S/d. Leche Entera 1 L",
@@ -193,14 +205,15 @@ describe("store-links (F019)", () => {
     });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
-    expect(parsed.pathname).not.toContain("s%2Fd");
-    expect(parsed.pathname).toContain("leche-entera");
-    const q = parsed.searchParams.get("_q") ?? "";
+    expect(parsed.pathname).toBe("/buscar");
+    const q = parsed.searchParams.get("q") ?? "";
     expect(q).not.toContain("S/d");
     expect(q).toContain("Leche");
+    expect(q).toContain("Entera");
+    expect(q).toContain("La Serenisima");
   });
 
-  it("Carrefour: limpia prefijo 'Sin descripción ' del slug", () => {
+  it("Carrefour: limpia prefijo 'Sin descripción ' del query", () => {
     const url = resolveStoreLink({
       chainSlug: "carrefour",
       productName: "Sin descripción Yogur Natural 170 g",
@@ -208,11 +221,15 @@ describe("store-links (F019)", () => {
     });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
-    expect(parsed.pathname).not.toContain("sin-descripcion");
-    expect(parsed.pathname).toContain("yogur-natural");
+    expect(parsed.pathname).toBe("/buscar");
+    const q = parsed.searchParams.get("q") ?? "";
+    expect(q).not.toContain("Sin descripción");
+    expect(q).toContain("Yogur");
+    expect(q).toContain("Natural");
+    expect(q).toContain("Danone");
   });
 
-  it("Carrefour: limpia sufijo 'x 100 g' del slug", () => {
+  it("Carrefour: limpia sufijo 'x 100 g' del query", () => {
     const url = resolveStoreLink({
       chainSlug: "carrefour",
       productName: "Galletitas Dulces x 100 g",
@@ -220,16 +237,15 @@ describe("store-links (F019)", () => {
     });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
-    expect(parsed.pathname).not.toContain("x-100-g");
-    expect(parsed.pathname).toContain("galletitas-dulces");
-    // El _q mantiene el query original (menos prefijos), pero sin "x 100 g"
-    const q = parsed.searchParams.get("_q") ?? "";
+    expect(parsed.pathname).toBe("/buscar");
+    const q = parsed.searchParams.get("q") ?? "";
     expect(q).not.toContain("x 100 g");
     expect(q).toContain("Galletitas");
     expect(q).toContain("Dulces");
+    expect(q).toContain("Terrabusi");
   });
 
-  it("Día/VEA/Jumbo/Disco/Changomas: mismos fixes de slug (builders compartidos vtexSearch)", () => {
+  it("Día/VEA/Jumbo/Disco/Changomas: mismos fixes de query (builders compartidos vtexSearch)", () => {
     for (const chain of ["dia", "jumbo", "vea", "disco", "changomas"]) {
       const url = resolveStoreLink({
         chainSlug: chain,
@@ -238,12 +254,13 @@ describe("store-links (F019)", () => {
       });
       expect(url).not.toBeNull();
       const parsed = new URL(url!);
-      expect(parsed.pathname).not.toContain("s%2Fd");
-      expect(parsed.pathname).toContain("pan-lactal-blanco");
-      const q = parsed.searchParams.get("_q") ?? "";
+      expect(parsed.pathname).toBe("/buscar");
+      const q = parsed.searchParams.get("q") ?? "";
       expect(q).not.toContain("S/d");
       expect(q).toContain("Pan");
       expect(q).toContain("Lactal");
+      expect(q).toContain("Blanco");
+      expect(q).toContain("Fargo");
     }
   });
 
@@ -256,7 +273,12 @@ describe("store-links (F019)", () => {
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.farmacity.com");
-    expect(parsed.pathname).not.toContain("s%2Fd");
-    expect(parsed.pathname).toContain("ibuprofeno-400-mg");
+    expect(parsed.pathname).toBe("/buscar");
+    const q = parsed.searchParams.get("q") ?? "";
+    expect(q).not.toContain("S/d");
+    expect(q).toContain("Ibuprofeno");
+    expect(q).toContain("400");
+    expect(q).toContain("mg");
+    expect(q).toContain("Genomma");
   });
 });
