@@ -60,6 +60,11 @@ prisma/migrations/dev.db-journal
 # storybook
 storybook-static/
 
-# design-canvas outputs (mantener .dc.html en repo; excluir el bundle pesado publicado)
-precioya-wireframes.html
-*.dc.html.bak
+# vercel
+.vercel
+
+# local tooling
+.claude/
+.agents/
+.teamctl/
+skills-lock.json
