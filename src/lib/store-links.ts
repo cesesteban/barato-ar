@@ -56,14 +56,14 @@ function cleanForVTEX(query: string): string {
 
 /**
  * URL de search de una tienda VTEX (Carrefour, Día, Jumbo, Vea, Disco,
- * Changomas, Farmacity comparten esta convención):
- *   https://{host}/{slug}?_q={query}&map=ft
- * El `slug` en el path ayuda al SEO de la tienda pero no es requerido.
- * El `_q` param pre-lena el buscador PERO no auto-dispara la búsqueda
- * (comportamiento estándar VTEX: necesita input del usuario).
+ * Changomas, Farmacity comparten esta convención).
  *
- * Para forzar resultados reales, usamos la página de resultados `/buscar`
- * con param `q` que SÍ muestra resultados directo.
+ * Patrón óptimo: homepage con `_q` param que pre-lena el buscador
+ * + `map=ft` para forzar resultados de full-text search (auto-ejecuta).
+ *   https://{host}/?_q={query}&map=ft
+ *
+ * El `_q` pre-lena la caja de búsqueda visible al usuario.
+ * El `map=ft` dispara la búsqueda automáticamente (evita el bug "borrar 1 letra para que busque").
  */
 function vtexSearch(host: string, q: string, brand?: string | null): string {
   const cleanedForSlug = cleanForVTEX(q);
@@ -74,9 +74,9 @@ function vtexSearch(host: string, q: string, brand?: string | null): string {
     queryForSearch = `${cleanedForSlug} ${brand}`;
   }
 
-  // USAR /buscar?q= que muestra resultados reales (no solo pre-fill)
   const encoded = encodeURIComponent(queryForSearch);
-  return `https://${host}/buscar?q=${encoded}`;
+  // Homepage con _q (pre-fill) + map=ft (auto-search)
+  return `https://${host}/?_q=${encoded}&map=ft`;
 }
 
 /**

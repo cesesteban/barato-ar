@@ -9,52 +9,58 @@ describe("store-links (F019)", () => {
   } as const;
 
   // ------------------------- VTEX chains -------------------------
-  // Usan /buscar?q= para mostrar resultados reales (no solo pre-fill _q)
+  // Usan homepage con _q (pre-fill) + map=ft (auto-search)
 
-  it("Carrefour → URL /buscar?q= con marca enriquecida", () => {
+  it("Carrefour → URL homepage con _q + map=ft y marca enriquecida", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "carrefour" });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.carrefour.com.ar");
-    expect(parsed.pathname).toBe("/buscar");
-    expect(parsed.searchParams.get("q")).toContain("Coca-Cola");
-    expect(parsed.searchParams.get("q")).toContain("Original");
+    expect(parsed.pathname).toBe("/");
+    expect(parsed.searchParams.get("_q")).toContain("Coca-Cola");
+    expect(parsed.searchParams.get("_q")).toContain("Original");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
-  it("Día → URL /buscar?q=", () => {
+  it("Día → URL homepage con _q + map=ft", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "dia" });
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("diaonline.supermercadosdia.com.ar");
-    expect(parsed.pathname).toBe("/buscar");
-    expect(parsed.searchParams.get("q")).toContain("Coca-Cola");
+    expect(parsed.pathname).toBe("/");
+    expect(parsed.searchParams.get("_q")).toContain("Coca-Cola");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
-  it("Jumbo → URL /buscar?q=", () => {
+  it("Jumbo → URL homepage con _q + map=ft", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "jumbo" });
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.jumbo.com.ar");
-    expect(parsed.pathname).toBe("/buscar");
+    expect(parsed.pathname).toBe("/");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
-  it("Vea → URL /buscar?q=", () => {
+  it("Vea → URL homepage con _q + map=ft", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "vea" });
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.vea.com.ar");
-    expect(parsed.pathname).toBe("/buscar");
+    expect(parsed.pathname).toBe("/");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
-  it("Disco → URL /buscar?q=", () => {
+  it("Disco → URL homepage con _q + map=ft", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "disco" });
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.disco.com.ar");
-    expect(parsed.pathname).toBe("/buscar");
+    expect(parsed.pathname).toBe("/");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
-  it("Changomas → URL /buscar?q=", () => {
+  it("Changomas → URL homepage con _q + map=ft", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "changomas" });
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.changomas.com.ar");
-    expect(parsed.pathname).toBe("/buscar");
+    expect(parsed.pathname).toBe("/");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
   // ------------------------- Custom builders -------------------------
@@ -75,12 +81,13 @@ describe("store-links (F019)", () => {
 
   // ------------------------- Farmacity (US2) -------------------------
 
-  it("Farmacity → URL /buscar?q=", () => {
+  it("Farmacity → URL homepage con _q + map=ft", () => {
     const url = resolveStoreLink({ ...baseCtx, chainSlug: "farmacity" });
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.farmacity.com");
-    expect(parsed.pathname).toBe("/buscar");
-    expect(parsed.searchParams.get("q")).toContain("Coca-Cola");
+    expect(parsed.pathname).toBe("/");
+    expect(parsed.searchParams.get("_q")).toContain("Coca-Cola");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
   // ------------------------- Priority: storeProductUrl gana -------------------------
@@ -189,12 +196,13 @@ describe("store-links (F019)", () => {
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.carrefour.com.ar");
-    expect(parsed.pathname).toBe("/buscar");
-    // El query q NO debe tener "S/d"
-    const q = parsed.searchParams.get("q") ?? "";
+    expect(parsed.pathname).toBe("/");
+    // El query _q NO debe tener "S/d"
+    const q = parsed.searchParams.get("_q") ?? "";
     expect(q).not.toContain("S/d");
     expect(q).toContain("Grisines");
     expect(q).toContain("Semillas");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
   it("Carrefour: limpia prefijo 'S/d.' (con punto) del query", () => {
@@ -205,12 +213,13 @@ describe("store-links (F019)", () => {
     });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
-    expect(parsed.pathname).toBe("/buscar");
-    const q = parsed.searchParams.get("q") ?? "";
+    expect(parsed.pathname).toBe("/");
+    const q = parsed.searchParams.get("_q") ?? "";
     expect(q).not.toContain("S/d");
     expect(q).toContain("Leche");
     expect(q).toContain("Entera");
     expect(q).toContain("La Serenisima");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
   it("Carrefour: limpia prefijo 'Sin descripción ' del query", () => {
@@ -221,12 +230,13 @@ describe("store-links (F019)", () => {
     });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
-    expect(parsed.pathname).toBe("/buscar");
-    const q = parsed.searchParams.get("q") ?? "";
+    expect(parsed.pathname).toBe("/");
+    const q = parsed.searchParams.get("_q") ?? "";
     expect(q).not.toContain("Sin descripción");
     expect(q).toContain("Yogur");
     expect(q).toContain("Natural");
     expect(q).toContain("Danone");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
   it("Carrefour: limpia sufijo 'x 100 g' del query", () => {
@@ -237,12 +247,13 @@ describe("store-links (F019)", () => {
     });
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
-    expect(parsed.pathname).toBe("/buscar");
-    const q = parsed.searchParams.get("q") ?? "";
+    expect(parsed.pathname).toBe("/");
+    const q = parsed.searchParams.get("_q") ?? "";
     expect(q).not.toContain("x 100 g");
     expect(q).toContain("Galletitas");
     expect(q).toContain("Dulces");
     expect(q).toContain("Terrabusi");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 
   it("Día/VEA/Jumbo/Disco/Changomas: mismos fixes de query (builders compartidos vtexSearch)", () => {
@@ -254,13 +265,14 @@ describe("store-links (F019)", () => {
       });
       expect(url).not.toBeNull();
       const parsed = new URL(url!);
-      expect(parsed.pathname).toBe("/buscar");
-      const q = parsed.searchParams.get("q") ?? "";
+      expect(parsed.pathname).toBe("/");
+      const q = parsed.searchParams.get("_q") ?? "";
       expect(q).not.toContain("S/d");
       expect(q).toContain("Pan");
       expect(q).toContain("Lactal");
       expect(q).toContain("Blanco");
       expect(q).toContain("Fargo");
+      expect(parsed.searchParams.get("map")).toBe("ft");
     }
   });
 
@@ -273,12 +285,13 @@ describe("store-links (F019)", () => {
     expect(url).not.toBeNull();
     const parsed = new URL(url!);
     expect(parsed.hostname).toBe("www.farmacity.com");
-    expect(parsed.pathname).toBe("/buscar");
-    const q = parsed.searchParams.get("q") ?? "";
+    expect(parsed.pathname).toBe("/");
+    const q = parsed.searchParams.get("_q") ?? "";
     expect(q).not.toContain("S/d");
     expect(q).toContain("Ibuprofeno");
     expect(q).toContain("400");
     expect(q).toContain("mg");
     expect(q).toContain("Genomma");
+    expect(parsed.searchParams.get("map")).toBe("ft");
   });
 });
