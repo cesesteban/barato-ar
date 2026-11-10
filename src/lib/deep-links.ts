@@ -53,34 +53,20 @@ function withUtm(url: string, extraParams?: Record<string, string>): string {
   return u.toString();
 }
 
-/**
- * URL de búsqueda por Google con filtro `site:` — siempre encuentra resultados
- * cuando la plataforma tiene el producto indexado. Usamos esto como fallback
- * porque las URLs nativas de PY y Rappi requieren cookie de dirección
- * seleccionada, sin la cual redirigen al selector y pierden el query.
- * Cuando exista deal con afiliados, cambiar a URL nativa (afiliado no
- * traquea a través de Google).
- */
-function googleSiteSearch(site: string, q: string): string {
-  return `https://www.google.com/search?q=${encodeURIComponent(`site:${site} ${q}`)}`;
-}
-
 export const DELIVERY_PARTNERS: DeliveryPartnerConfig[] = [
   {
     slug: "pedidosya",
     name: "PedidosYa",
     hostLabel: "pedidosya.com.ar",
     buildSearchUrl: (q: string, affiliateId?: string) => {
-      // Con afiliado activado, URL nativa (necesaria para tracking del deal).
+      // Native search URL — pre-carga el query y el usuario elige dirección
+      // después (no requiere cookie previa). Con afiliado agrega partnerId.
+      const base = `https://www.pedidosya.com.ar/mercados-y-almacenes?searchTerm=${encodeURIComponent(q)}`;
       if (affiliateId) {
-        return withUtm(
-          `https://www.pedidosya.com.ar/mercados-y-almacenes?searchTerm=${encodeURIComponent(q)}`,
-          { partnerId: affiliateId, utm_source: affiliateId },
-        );
+        return withUtm(base, { partnerId: affiliateId, utm_source: affiliateId });
       }
-      // Sin afiliado: Google site search — no requiere cookie de dirección y
-      // siempre lleva a la página real del producto en PY.
-      return googleSiteSearch("pedidosya.com.ar", q);
+      // Sin afiliado: tracking-only UTM, link nativo (no Google fallback)
+      return withUtm(base);
     },
   },
   {
@@ -88,13 +74,13 @@ export const DELIVERY_PARTNERS: DeliveryPartnerConfig[] = [
     name: "Rappi",
     hostLabel: "rappi.com.ar",
     buildSearchUrl: (q: string, affiliateId?: string) => {
+      // Native search URL — igual que PY: el query viaja y Rappi pide
+      // dirección si no la hay. Con afiliado agrega ref.
+      const base = `https://www.rappi.com.ar/search?query=${encodeURIComponent(q)}`;
       if (affiliateId) {
-        return withUtm(
-          `https://www.rappi.com.ar/search?query=${encodeURIComponent(q)}`,
-          { ref: affiliateId, utm_source: affiliateId },
-        );
+        return withUtm(base, { ref: affiliateId, utm_source: affiliateId });
       }
-      return googleSiteSearch("rappi.com.ar", q);
+      return withUtm(base);
     },
   },
   {
@@ -119,15 +105,23 @@ export const DELIVERY_PARTNERS: DeliveryPartnerConfig[] = [
  *
  * Los nombres de SEPA vienen con ruido específico de su dataset (códigos
  * de packaging, unidades poco comunes, presentaciones abreviadas, prefijos
- * basura como "S/d") que Google y las apps de delivery no indexan —
- * hay que sacarlo para que la búsqueda encuentre resultados.
+ * basura como "S/d", cantidades de pack) que Google y las apps de delivery
+ * no indexan — hay que sacarlo para que la búsqueda encuentre resultados.
+ *
+ * Estrategia:
+ * - MANTENER specs de tamaño útiles: "750 ml", "330 ml", "1L", "500g"
+ * - ELIMINAR multiplicadores de pack: "x 6", "Pack 12", "x 100 g", "2x1"
+ * - ELIMINAR códigos SEPA: "BOT-750-ml", "PCK-6-un"
+ * - ELIMINAR prefijos basura: "S/d", "Sin descripción"
  *
  * Ejemplos reales:
  *   "Vino la Celia Elite Malbec 750 cc BOT-750-ml" → "Vino la Celia Elite Malbec 750 ml"
  *   "Cerveza Heineken Rubia 330 cc Sixpack PCK-6-un" → "Cerveza Heineken Rubia 330 ml Sixpack"
  *   "Gaseosa Coca Cola Original 237 cc BOT-237-cc" → "Gaseosa Coca Cola Original 237 ml"
  *   "S/d Grisines Panader a Semillas x 100 g" → "Grisines Panader a Semillas"
- *   "Sin descripción Leche Entera 1 L" → "Leche Entera"
+ *   "Sin descripción Leche Entera 1 L" → "Leche Entera 1 L"
+ *   "Galletitas Oreo x 6 Pack Promo 2x1" → "Galletitas Oreo"
+ *   "Yogur Ser Natural 170 g x 4 unidades" → "Yogur Ser Natural 170 g"
  */
 export function buildDeliveryQuery(productName: string, brand: string | null): string {
   let cleaned = productName
@@ -141,7 +135,13 @@ export function buildDeliveryQuery(productName: string, brand: string | null): s
     .replace(/\b\d{6,}\b/g, "")
     // "cc" como unidad → ml (SEPA usa cc para líquidos, PY usa ml)
     .replace(/(\d)\s*cc\b/gi, "$1 ml")
-    // "grs" / "gr" → g
+    // Eliminar multiplicadores de pack ANTES de normalizar unidades:
+    // "Pack 12", "Promo 2x1", "Oferta 3", "x 6", "x 100 g", "x 4 unidades", "x 30 grs"
+    .replace(/\b(?:pack|promo|promoción|promocion|oferta)\s*\d+(?:[xX]\d+)?\b/gi, "")
+    .replace(/\s+x\s*\d+\s*(?:uni?ds?|unidades?|packs?|g|grs?|ml|l|cc|kg)?\b/gi, "")
+    // Eliminar patrones "N x N" tipo promo (2x1, 3x2, etc.)
+    .replace(/\b\d+\s*x\s*\d+\b/gi, "")
+    // "grs" / "gr" / "gramos" → g (después de eliminar "x N grs")
     .replace(/(\d)\s*(grs?|gramos)\b/gi, "$1 g")
     // Colapsar espacios y trim
     .replace(/\s+/g, " ")
