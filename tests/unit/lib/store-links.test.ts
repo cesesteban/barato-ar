@@ -163,4 +163,100 @@ describe("store-links (F019)", () => {
     expect(Ntt).toContain("Vino");
     expect(Ntt).toContain("Malbec");
   });
+
+  // ------------------------- VTEX slug cleaning (US5) -------------------------
+
+  it("Carrefour: limpia prefijo 'S/d ' del slug y del _q (bug reported)", () => {
+    const url = resolveStoreLink({
+      chainSlug: "carrefour",
+      productName: "S/d Grisines Panader a Semillas x 100 g",
+      brand: null,
+    });
+    expect(url).not.toBeNull();
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.carrefour.com.ar");
+    // El slug del path NO debe tener "s%2Fd-"
+    expect(parsed.pathname).not.toContain("s%2Fd");
+    expect(parsed.pathname).toContain("grisines-panader-a-semillas");
+    // El _q tampoco debe tener "S/d"
+    const q = parsed.searchParams.get("_q") ?? "";
+    expect(q).not.toContain("S/d");
+    expect(q).toContain("Grisines");
+    expect(q).toContain("Semillas");
+  });
+
+  it("Carrefour: limpia prefijo 'S/d.' (con punto) del slug", () => {
+    const url = resolveStoreLink({
+      chainSlug: "carrefour",
+      productName: "S/d. Leche Entera 1 L",
+      brand: "La Serenisima",
+    });
+    expect(url).not.toBeNull();
+    const parsed = new URL(url!);
+    expect(parsed.pathname).not.toContain("s%2Fd");
+    expect(parsed.pathname).toContain("leche-entera");
+    const q = parsed.searchParams.get("_q") ?? "";
+    expect(q).not.toContain("S/d");
+    expect(q).toContain("Leche");
+  });
+
+  it("Carrefour: limpia prefijo 'Sin descripción ' del slug", () => {
+    const url = resolveStoreLink({
+      chainSlug: "carrefour",
+      productName: "Sin descripción Yogur Natural 170 g",
+      brand: "Danone",
+    });
+    expect(url).not.toBeNull();
+    const parsed = new URL(url!);
+    expect(parsed.pathname).not.toContain("sin-descripcion");
+    expect(parsed.pathname).toContain("yogur-natural");
+  });
+
+  it("Carrefour: limpia sufijo 'x 100 g' del slug", () => {
+    const url = resolveStoreLink({
+      chainSlug: "carrefour",
+      productName: "Galletitas Dulces x 100 g",
+      brand: "Terrabusi",
+    });
+    expect(url).not.toBeNull();
+    const parsed = new URL(url!);
+    expect(parsed.pathname).not.toContain("x-100-g");
+    expect(parsed.pathname).toContain("galletitas-dulces");
+    // El _q mantiene el query original (menos prefijos), pero sin "x 100 g"
+    const q = parsed.searchParams.get("_q") ?? "";
+    expect(q).not.toContain("x 100 g");
+    expect(q).toContain("Galletitas");
+    expect(q).toContain("Dulces");
+  });
+
+  it("Día/VEA/Jumbo/Disco/Changomas: mismos fixes de slug (builders compartidos vtexSearch)", () => {
+    for (const chain of ["dia", "jumbo", "vea", "disco", "changomas"]) {
+      const url = resolveStoreLink({
+        chainSlug: chain,
+        productName: "S/d Pan Lactal Blanco 460 g",
+        brand: "Fargo",
+      });
+      expect(url).not.toBeNull();
+      const parsed = new URL(url!);
+      expect(parsed.pathname).not.toContain("s%2Fd");
+      expect(parsed.pathname).toContain("pan-lactal-blanco");
+      const q = parsed.searchParams.get("_q") ?? "";
+      expect(q).not.toContain("S/d");
+      expect(q).toContain("Pan");
+      expect(q).toContain("Lactal");
+    }
+  });
+
+  it("Farmacity: mismo fix (también usa vtexSearch)", () => {
+    const url = resolveStoreLink({
+      chainSlug: "farmacity",
+      productName: "S/d Ibuprofeno 400 mg x 20 caps",
+      brand: "Genomma",
+    });
+    expect(url).not.toBeNull();
+    const parsed = new URL(url!);
+    expect(parsed.hostname).toBe("www.farmacity.com");
+    expect(parsed.pathname).not.toContain("s%2Fd");
+    expect(parsed.pathname).toContain("ibuprofeno-400-mg");
+  });
 });

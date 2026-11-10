@@ -112,6 +112,14 @@ stores (geo): 954      alerts: 0
 ### ⚫ No implementado / pendiente config externa
 
 **B-10 · Alerts en prod NO funcionan para usuarios externos**
+
+**B-18 · Store links con prefijo "S/d " rompen búsqueda en Carrefour (y demás VTEX)**
+- Productos SEPA con nombre "S/d Grisines Panader a Semillas x 100 g" generan URL VTEX con slug `s%2Fd-grisines...` → 404 en Carrefour.
+- Root cause: `vtexSearch()` en `src/lib/store-links.ts` usaba el nombre completo (incluyendo prefijo basura "S/d ") para armar tanto el slug del path como el query param `_q`.
+- Fix: función `cleanForVTEX()` que strippea prefijos "S/d ", "S/d.", "Sin descripción ", "Sin desc. " y sufijos "x 100 g", "Pack 6", etc. antes de construir la URL. Aplica a todas las cadenas VTEX (Carrefour, Día, Jumbo, Vea, Disco, Changomas, Farmacity).
+- Tests agregados cubren casos: "S/d ", "S/d.", "Sin descripción ", sufijo "x N g", y verificación multi-chain.
+- Prioridad: **P1** (bug visible en UX core).
+- Estado: ✅ **RESUELTO** (commit `fix(store-links): clean S/d prefix from VTEX search URLs`)
 - 0 alerts creadas en DB → nadie las probó (o el flujo falla).
 - Resend en modo sandbox: solo envía a `ces.esteban@gmail.com`.
 - Bloqueador: dominio verificado + Resend production mode (requiere DNS del dominio propio, que no tenemos porque `barato.ar` estaba ocupado).

@@ -32,14 +32,38 @@ export type StoreLinkContext = {
 type ChainBuilder = (query: string) => string;
 
 /**
+ * Limpia prefijos y sufijos comunes en nombres de productos SEPA que
+ * ensucian el slug de VTEX y rompen las URLs de búsqueda.
+ *
+ * Se aplica tanto al segmento de "slug" como al query param _q.
+ * El query ya viene procesado por buildDeliveryQuery (puede tener
+ * la marca preprendida), así que los prefijos pueden estar al inicio
+ * o después de un espacio.
+ */
+function cleanForVTEX(query: string): string {
+  return query
+    // Prefijos basura típicos de SEPA — al inicio O precedidos de espacio
+    .replace(/(^|\s)s\/?d\.?\s+/gi, "$1")           // "S/d ", "S/d.", "S/d", "s/d "
+    .replace(/(^|\s)sin\s+descripci[oó]n\s+/gi, "$1") // "Sin descripción "
+    .replace(/(^|\s)sin\s+desc\.?\s+/gi, "$1")      // "Sin desc. "
+    // Sufijos de presentación/packaging comunes en SEPA
+    .replace(/\s+x\s+\d+(?:[.,]\d+)?\s*(?:g|gr|grs|grms|kg|ml|l|cc|un|uds?|unidades?)\b/gi, "")
+    .replace(/\b(?:pack|promo|promocion|promoción|oferta)\s*(?:de|x)?\s*\d+/gi, "")
+    // Colapsar espacios
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * URL de search de una tienda VTEX (Carrefour, Día, Jumbo, Vea, Disco,
  * Changomas, Farmacity comparten esta convención):
  *   https://{host}/{slug}?_q={query}&map=ft
  * El `slug` en el path ayuda al SEO de la tienda pero no es requerido.
  */
 function vtexSearch(host: string, q: string): string {
-  const slug = encodeURIComponent(q.replace(/\s+/g, "-").toLowerCase());
-  const encoded = encodeURIComponent(q);
+  const cleaned = cleanForVTEX(q);
+  const slug = encodeURIComponent(cleaned.replace(/\s+/g, "-").toLowerCase());
+  const encoded = encodeURIComponent(cleaned);
   return `https://${host}/${slug}?_q=${encoded}&map=ft`;
 }
 

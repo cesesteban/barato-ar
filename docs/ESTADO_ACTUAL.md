@@ -122,6 +122,10 @@ Detalle completo en [AUDIT.md](AUDIT.md).
 - **B-14** · Upstash Redis NO configurado
 - **B-15** · R2 NO configurado
 
+### 🟢 P1 — RESUELTOS esta sesión
+
+- **B-18** · Store links con prefijo "S/d " rompen búsqueda en Carrefour/VTEX — fix en `src/lib/store-links.ts` (`cleanForVTEX`) + tests ✅
+
 ### 🟢 P2 — mejoras iterativas
 
 - **B-03** · Nombres truncados en algunas cadenas (SEPA source data)
